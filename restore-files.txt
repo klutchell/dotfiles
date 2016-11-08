@@ -1,0 +1,8 @@
+home/kyle/.config/
+home/kyle/.gdrive/
+home/kyle/.gitconfig
+etc/fail2ban/jail.local
+etc/rsnapshot.conf
+etc/systemd/system/docker.service.d/noiptables.conf
+etc/ufw/before.rules
+opt/

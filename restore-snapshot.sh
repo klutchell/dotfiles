@@ -2,18 +2,10 @@
 
 set -eo pipefail
 
-abs_dir()
-{
-	echo "$(cd "$(dirname "${1}")" && pwd)"
-}
-
-abs_file()
-{
-	echo "$(cd "$(dirname "${1}")" && pwd)/$(basename "${1}")"
-}
+abs() { echo "$(cd "$(dirname "${1}")" && pwd)/$(basename "${1}")"; }
 
 THIS="$(basename "$0")"
-HERE="$(abs_dir "${BASH_SOURCE[0]}")"
+HERE="$(dirname "$(abs "${BASH_SOURCE[0]}")")"
 PID="/tmp/${THIS%.*}.pid"
 LOG="/tmp/${THIS%.*}.log"
 SCRATCH="$(mktemp -d -t tmp.XXXXXXXXXX)"
@@ -45,16 +37,26 @@ echo "running $THIS $@"
 /usr/bin/renice -n 19 -p $$ &>/dev/null
 /usr/bin/ionice -c 2 -n 7 -p $$ &>/dev/null
 
-GDRIVE_CONFIG="~/.gdrive"
-GDRIVE_PARENT="$(head -n1 "$GDRIVE_CONFIG"/snapshot-parent.txt)"
+if [ "$(id -u)" != "0" ]; then
+	echo "This script must be run as root" 1>&2
+	exit 1
+fi
+
+# gdrive config
+GDRIVE_CONFIG="/home/kyle/.gdrive"
+GDRIVE_PARENT="0B8Hwaj3ywtn-dTVmN2FnZUpseDA"
 GDRIVE_OUTFILE="outfile"
 
-RESTORE_FILES="$GDRIVE_CONFIG/restore-files.txt"
+RESTORE_FILES="$HERE/restore-files.txt"
 EXTRACT_DIR="/"
-TARBALL="snapshot.tar.gz"
 
+[ -d "$GDRIVE_CONFIG" ] || { echo "$GDRIVE_CONFIG does not exist"; exit 1; }
+[ -f "$RESTORE_FILES" ] || { echo "$RESTORE_FILES does not exist"; exit 1; }
+
+# move to scratch
 pushd "$SCRATCH" >/dev/null
 
+# list snapshots
 /usr/sbin/gdrive -c "$GDRIVE_CONFIG" list --query "'$GDRIVE_PARENT' in parents and trashed = false" --order "createdTime desc" > "$GDRIVE_OUTFILE"
 cat "$GDRIVE_OUTFILE"
 
@@ -64,9 +66,11 @@ while true; do
 	echo "please enter a valid file id"
 done
 
+# download file
 rm "$GDRIVE_OUTFILE" 2>/dev/null || true
 /usr/sbin/gdrive -c "$GDRIVE_CONFIG" download --stdout "$FILE_ID" > "$GDRIVE_OUTFILE"
 
+# list restore files
 cat "$RESTORE_FILES"
 
 while true; do
@@ -78,8 +82,9 @@ while true; do
 	esac
 done
 
+# extract
 echo "extracting files to $EXTRACT_DIR..."
-sudo sh -c 'mkdir "$EXTRACT_DIR" 2>/dev/null || true
-tar xzpvf "$GDRIVE_OUTFILE" -C "$EXTRACT_DIR" -T "$RESTORE_FILES"'
+mkdir "$EXTRACT_DIR" 2>/dev/null || true
+tar xzpvf "$GDRIVE_OUTFILE" -C "$EXTRACT_DIR" -T "$RESTORE_FILES"
 
 popd >/dev/null

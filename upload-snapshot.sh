@@ -2,18 +2,10 @@
 
 set -eo pipefail
 
-abs_dir()
-{
-	echo "$(cd "$(dirname "${1}")" && pwd)"
-}
-
-abs_file()
-{
-	echo "$(cd "$(dirname "${1}")" && pwd)/$(basename "${1}")"
-}
+abs() { echo "$(cd "$(dirname "${1}")" && pwd)/$(basename "${1}")"; }
 
 THIS="$(basename "$0")"
-HERE="$(abs_dir "${BASH_SOURCE[0]}")"
+HERE="$(dirname "$(abs "${BASH_SOURCE[0]}")")"
 PID="/tmp/${THIS%.*}.pid"
 LOG="/tmp/${THIS%.*}.log"
 SCRATCH="$(mktemp -d -t tmp.XXXXXXXXXX)"
@@ -50,23 +42,29 @@ if [ "$(id -u)" != "0" ]; then
 	exit 1
 fi
 
+# gdrive config
+GDRIVE_CONFIG="/home/kyle/.gdrive"
+GDRIVE_PARENT="0B8Hwaj3ywtn-dTVmN2FnZUpseDA"
+GDRIVE_OUTFILE="outfile"
+
+# snapshot path and timestamp
 SNAPSHOT="/data/.snapshots/alpha.0/localhost"
 TARBALL="$(hostname)_$(date -r "$SNAPSHOT" +%Y.%m.%d_%H.%M.%S).tar.gz"
 
-GDRIVE_CONFIG="~/.gdrive"
-GDRIVE_PARENT="$(head -n1 "$GDRIVE_CONFIG"/snapshot-parent.txt)"
-GDRIVE_OUTFILE="outfile"
-
+# compress
 pushd "$SNAPSHOT" >/dev/null
 echo "compressing $SNAPSHOT into $TARBALL..."
 tar -czf "$SCRATCH/$TARBALL" *
 popd >/dev/null
 
+# move to scratch
 pushd "$SCRATCH" >/dev/null
 
+# list snapshots
 /usr/sbin/gdrive -c "$GDRIVE_CONFIG" list --query "name contains '$(hostname)' and '$GDRIVE_PARENT' in parents and trashed = false" --order "createdTime desc" > "$GDRIVE_OUTFILE"
 cat "$GDRIVE_OUTFILE"
 
+# upload or update
 FILE_ID="$(grep "$TARBALL" "$GDRIVE_OUTFILE" | head -n1 | cut -d' ' -f1)" || true
 if [ -n "$FILE_ID" ]; then
 	/usr/sbin/gdrive -c "$GDRIVE_CONFIG" update "$FILE_ID" "$SCRATCH/$TARBALL"
@@ -74,9 +72,11 @@ else
 	/usr/sbin/gdrive -c "$GDRIVE_CONFIG" upload -p "$GDRIVE_PARENT" "$SCRATCH/$TARBALL"
 fi
 
+# list snapshots
 /usr/sbin/gdrive -c "$GDRIVE_CONFIG" list --query "name contains '$(hostname)' and '$GDRIVE_PARENT' in parents and trashed = false" --order "createdTime desc" > "$GDRIVE_OUTFILE"
 cat "$GDRIVE_OUTFILE"
 
+# delete oldest
 SNAPSHOT_COUNT="$(($(cat $GDRIVE_OUTFILE | wc -l)-1))"
 if [ "$SNAPSHOT_COUNT" -gt 7 ]; then
 	FILE_ID="$(tail -n1 $GDRIVE_OUTFILE | cut -d' ' -f1)"

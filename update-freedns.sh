@@ -2,18 +2,10 @@
 
 set -eo pipefail
 
-abs_dir()
-{
-	echo "$(cd "$(dirname "${1}")" && pwd)"
-}
-
-abs_file()
-{
-	echo "$(cd "$(dirname "${1}")" && pwd)/$(basename "${1}")"
-}
+abs() { echo "$(cd "$(dirname "${1}")" && pwd)/$(basename "${1}")"; }
 
 THIS="$(basename "$0")"
-HERE="$(abs_dir "${BASH_SOURCE[0]}")"
+HERE="$(dirname "$(abs "${BASH_SOURCE[0]}")")"
 PID="/tmp/${THIS%.*}.pid"
 LOG="/tmp/${THIS%.*}.log"
 SCRATCH="$(mktemp -d -t tmp.XXXXXXXXXX)"
@@ -45,9 +37,11 @@ echo "running $THIS $@"
 /usr/bin/renice -n 19 -p $$ &>/dev/null
 /usr/bin/ionice -c 2 -n 7 -p $$ &>/dev/null
 
-FREEDNS_CONFIG="~/.freedns"
-FREEDNS_URL="$(head -n1 "$FREEDNS_CONFIG"/freedns-url.txt)"
+# freedns config
+FREEDNS_CONFIG="/home/kyle/.freedns"
+FREEDNS_URL="$(head -n1 "$FREEDNS_CONFIG/freedns-url.txt")"
 
+# move to scratch
 pushd "$SCRATCH" >/dev/null
 
 # sleep for random 0 to 59 minutes
