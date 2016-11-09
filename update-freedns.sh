@@ -37,9 +37,8 @@ echo "running $THIS $@"
 /usr/bin/renice -n 19 -p $$ &>/dev/null
 /usr/bin/ionice -c 2 -n 7 -p $$ &>/dev/null
 
-# freedns config
-FREEDNS_CONFIG="/home/kyle/.freedns"
-FREEDNS_URL="$(head -n1 "$FREEDNS_CONFIG/freedns-url.txt")"
+# freedns api key
+API_KEY="$(head -n1 /home/kyle/.freedns)"
 
 # move to scratch
 pushd "$SCRATCH" >/dev/null
@@ -48,6 +47,6 @@ pushd "$SCRATCH" >/dev/null
 sleep $(( $(od -N1 -tuC -An /dev/urandom) % 59 ))m
 
 # update freedns with current ip
-wget -O - "$FREEDNS_URL"
+wget -O - "http://freedns.afraid.org/dynamic/update.php?${API_KEY}"
 
 popd >/dev/null

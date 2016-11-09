@@ -2,18 +2,10 @@
 
 set -eo pipefail
 
-abs_dir()
-{
-	echo "$(cd "$(dirname "${1}")" && pwd)"
-}
-
-abs_file()
-{
-	echo "$(cd "$(dirname "${1}")" && pwd)/$(basename "${1}")"
-}
+abs() { echo "$(cd "$(dirname "${1}")" && pwd)/$(basename "${1}")"; }
 
 THIS="$(basename "$0")"
-HERE="$(abs_dir "${BASH_SOURCE[0]}")"
+HERE="$(dirname "$(abs "${BASH_SOURCE[0]}")")"
 PID="/tmp/${THIS%.*}.pid"
 LOG="/tmp/${THIS%.*}.log"
 SCRATCH="$(mktemp -d -t tmp.XXXXXXXXXX)"

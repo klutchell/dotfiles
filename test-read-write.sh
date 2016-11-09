@@ -2,19 +2,21 @@
 
 set -eo pipefail
 
+abs() { echo "$(cd "$(dirname "${1}")" && pwd)/$(basename "${1}")"; }
+
 THIS="$(basename "$0")"
-HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+HERE="$(dirname "$(abs "${BASH_SOURCE[0]}")")"
 PID="/tmp/${THIS%.*}.pid"
 LOG="/tmp/${THIS%.*}.log"
+SCRATCH="$(mktemp -d -t tmp.XXXXXXXXXX)"
 
 finish()
 {
 	local rc=$?
 	echo "exited $THIS with error level $rc"
 	[ -f "$PID" ] && [ "$(cat "$PID")" = "$$" ] && rm "$PID" &>/dev/null
-	[ -f "$TARGET/ddfile" ] && rm "$TARGET/ddfile" &>/dev/null
-	[ -f "$TARGET/ddfile2" ] && rm "$TARGET/ddfile2" &>/dev/null
 	popd &>/dev/null || true
+	rm -rf "$SCRATCH" &>/dev/null || true
 	exit $rc
 }
 trap finish INT TERM EXIT

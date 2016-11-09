@@ -51,7 +51,7 @@ GDRIVE_OUTFILE="outfile"
 SNAPSHOT="/data/.snapshots/alpha.0/localhost"
 TARBALL="$(hostname)_$(date -r "$SNAPSHOT" +%Y.%m.%d_%H.%M.%S).tar.gz"
 
-# compress
+# compress as sudo
 pushd "$SNAPSHOT" >/dev/null
 echo "compressing $SNAPSHOT into $TARBALL..."
 tar -czf "$SCRATCH/$TARBALL" *
