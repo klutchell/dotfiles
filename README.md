@@ -2,7 +2,7 @@
 
 ### What is this repository for? ###
 
-* My personal Ubuntu server management utilities.
+* My personal Linux server management utilities.
 
 ### How do I get set up? ###
 
