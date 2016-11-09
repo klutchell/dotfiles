@@ -5,7 +5,7 @@ set -eo pipefail
 abs() { echo "$(cd "$(dirname "${1}")" && pwd)/$(basename "${1}")"; }
 
 THIS="$(basename "$0")"
-HERE="$(dirname "$(abs "${BASH_SOURCE[0]}")")"
+BIN="$(dirname "$(abs "${BASH_SOURCE[0]}")")"
 PID="/tmp/${THIS%.*}.pid"
 LOG="/tmp/${THIS%.*}.log"
 SCRATCH="$(mktemp -d -t tmp.XXXXXXXXXX)"
@@ -53,6 +53,7 @@ clean_dir()
 	done <   <(find "$1" -maxdepth 1 -type d -mtime "$3" -print0)
 }
 
+# move to scratch
 pushd "$SCRATCH" >/dev/null
 
 # movies, 200MB, 14 days

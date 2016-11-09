@@ -5,7 +5,7 @@ set -eo pipefail
 abs() { echo "$(cd "$(dirname "${1}")" && pwd)/$(basename "${1}")"; }
 
 THIS="$(basename "$0")"
-HERE="$(dirname "$(abs "${BASH_SOURCE[0]}")")"
+BIN="$(dirname "$(abs "${BASH_SOURCE[0]}")")"
 PID="/tmp/${THIS%.*}.pid"
 LOG="/tmp/${THIS%.*}.log"
 SCRATCH="$(mktemp -d -t tmp.XXXXXXXXXX)"
@@ -32,10 +32,6 @@ echo $$ > "$PID"
 
 # print arguments
 echo "running $THIS $@"
-
-# lower script priority
-/usr/bin/renice -n 19 -p $$ &>/dev/null
-/usr/bin/ionice -c 2 -n 7 -p $$ &>/dev/null
 
 if [ "$(id -u)" = "0" ]; then
 	echo "This script should not be run as root" 1>&2
@@ -286,6 +282,7 @@ install_all()
 	install_nano
 	install_moreutils
 	install_docker
+	install_lynis
 	# install_nginx
 	# install_hdparm
 	# install_glances

@@ -5,7 +5,7 @@ set -eo pipefail
 abs() { echo "$(cd "$(dirname "${1}")" && pwd)/$(basename "${1}")"; }
 
 THIS="$(basename "$0")"
-HERE="$(dirname "$(abs "${BASH_SOURCE[0]}")")"
+BIN="$(dirname "$(abs "${BASH_SOURCE[0]}")")"
 PID="/tmp/${THIS%.*}.pid"
 LOG="/tmp/${THIS%.*}.log"
 SCRATCH="$(mktemp -d -t tmp.XXXXXXXXXX)"
@@ -266,7 +266,6 @@ usage()
 	exit 1
 }
 
-pushd "$SCRATCH" >/dev/null
 case $2 in
 	"all")
 		containers="nzbget sonarr couchpotato plex plexpy transmission glances nginx";;
@@ -276,14 +275,22 @@ case $2 in
 		containers=$2;;
 esac
 
+# move to scratch
+pushd "$SCRATCH" >/dev/null
+
 for cont in $containers; do
 	echo
 	reset_vars
 	eval "set_${cont}" || usage
 	eval "docker_${1}" || usage
 done
+
+# list containers
 echo
 docker ps -a
+
+# list images
 echo
 docker images
+
 popd >/dev/null

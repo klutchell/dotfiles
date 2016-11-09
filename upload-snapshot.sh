@@ -5,7 +5,7 @@ set -eo pipefail
 abs() { echo "$(cd "$(dirname "${1}")" && pwd)/$(basename "${1}")"; }
 
 THIS="$(basename "$0")"
-HERE="$(dirname "$(abs "${BASH_SOURCE[0]}")")"
+BIN="$(dirname "$(abs "${BASH_SOURCE[0]}")")"
 PID="/tmp/${THIS%.*}.pid"
 LOG="/tmp/${THIS%.*}.log"
 SCRATCH="$(mktemp -d -t tmp.XXXXXXXXXX)"
@@ -51,7 +51,7 @@ GDRIVE_OUTFILE="outfile"
 SNAPSHOT="/data/.snapshots/alpha.0/localhost"
 TARBALL="$(hostname)_$(date -r "$SNAPSHOT" +%Y.%m.%d_%H.%M.%S).tar.gz"
 
-# compress as sudo
+# compress
 pushd "$SNAPSHOT" >/dev/null
 echo "compressing $SNAPSHOT into $TARBALL..."
 tar -czf "$SCRATCH/$TARBALL" *

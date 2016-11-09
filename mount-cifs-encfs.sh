@@ -5,7 +5,7 @@ set -eo pipefail
 abs() { echo "$(cd "$(dirname "${1}")" && pwd)/$(basename "${1}")"; }
 
 THIS="$(basename "$0")"
-HERE="$(dirname "$(abs "${BASH_SOURCE[0]}")")"
+BIN="$(dirname "$(abs "${BASH_SOURCE[0]}")")"
 PID="/tmp/${THIS%.*}.pid"
 LOG="/tmp/${THIS%.*}.log"
 SCRATCH="$(mktemp -d -t tmp.XXXXXXXXXX)"
@@ -44,30 +44,30 @@ fi
 
 pushd "$SCRATCH" >/dev/null
 
-echo "unmount unionfs /mnt/union..."
-/bin/fusermount -uz "/mnt/union" || true
+# echo "unmount unionfs /mnt/union..."
+# /bin/fusermount -uz "/mnt/union" || true
 
-echo "unmount encfs /mnt/acd..."
-/bin/fusermount -uz "/mnt/acd" || true
+# echo "unmount encfs /mnt/acd..."
+# /bin/fusermount -uz "/mnt/acd" || true
 
-echo "unmount encfs /mnt/local..."
-/bin/fusermount -uz "/mnt/local" || true
+# echo "unmount encfs /mnt/local..."
+# /bin/fusermount -uz "/mnt/local" || true
 
-echo "unmount acd /mnt/.acd..."
-/bin/fusermount -uz "/mnt/.acd" || true
+# echo "unmount acd /mnt/.acd..."
+# /bin/fusermount -uz "/mnt/.acd" || true
 
-echo "mount acd /mnt/.acd..."
-/usr/local/bin/acd_cli sync
-/usr/local/bin/acd_cli mount -ao -ro --uid 1000 --gid 1000 --umask 0007 /mnt/.acd
+# echo "mount acd /mnt/.acd..."
+# /usr/local/bin/acd_cli sync
+# /usr/local/bin/acd_cli mount -ao -ro --uid 1000 --gid 1000 --umask 0007 /mnt/.acd
 
-echo "mount encfs /mnt/acd..."
-ENCFS6_CONFIG='/root/.encfs/encfs.xml' /usr/bin/encfs -o allow_other,nonempty,uid=1000,gid=1000,umask=0007 --extpass="cat /root/.encfs/credentials.txt" "/mnt/.acd/encrypted" "/mnt/acd"
+# echo "mount encfs /mnt/acd..."
+# ENCFS6_CONFIG='/root/.encfs/encfs.xml' /usr/bin/encfs -o allow_other,nonempty,uid=1000,gid=1000,umask=0007 --extpass="cat /root/.encfs/credentials.txt" "/mnt/.acd/encrypted" "/mnt/acd"
 
-echo "mount encfs /mnt/local..."
-ENCFS6_CONFIG='/root/.encfs/encfs.xml' /usr/bin/encfs -o allow_other,nonempty,uid=1000,gid=1000,umask=0007 --extpass="cat /root/.encfs/credentials.txt" "/mnt/.local/encrypted" "/mnt/local"
+# echo "mount encfs /mnt/local..."
+# ENCFS6_CONFIG='/root/.encfs/encfs.xml' /usr/bin/encfs -o allow_other,nonempty,uid=1000,gid=1000,umask=0007 --extpass="cat /root/.encfs/credentials.txt" "/mnt/.local/encrypted" "/mnt/local"
 
-echo "mount unionfs /mnt/union..."
-/usr/bin/unionfs-fuse -o cow,allow_other,uid=1000,gid=1000,umask=0007 /mnt/local=RW:/mnt/acd=RO /mnt/union/
+# echo "mount unionfs /mnt/union..."
+# /usr/bin/unionfs-fuse -o cow,allow_other,uid=1000,gid=1000,umask=0007 /mnt/local=RW:/mnt/acd=RO /mnt/union/
 
 #echo "unmount encfs /mnt/backup-server..."
 #/bin/umount "/mnt/backup-server" || true

@@ -5,7 +5,7 @@ set -eo pipefail
 abs() { echo "$(cd "$(dirname "${1}")" && pwd)/$(basename "${1}")"; }
 
 THIS="$(basename "$0")"
-HERE="$(dirname "$(abs "${BASH_SOURCE[0]}")")"
+BIN="$(dirname "$(abs "${BASH_SOURCE[0]}")")"
 PID="/tmp/${THIS%.*}.pid"
 LOG="/tmp/${THIS%.*}.log"
 SCRATCH="$(mktemp -d -t tmp.XXXXXXXXXX)"
@@ -33,10 +33,6 @@ echo $$ > "$PID"
 # print arguments
 echo "running $THIS $@"
 
-# lower script priority
-/usr/bin/renice -n 19 -p $$ &>/dev/null
-/usr/bin/ionice -c 2 -n 7 -p $$ &>/dev/null
-
 if [ "$(id -u)" != "0" ]; then
 	echo "This script must be run as root" 1>&2
 	exit 1
@@ -47,7 +43,7 @@ GDRIVE_CONFIG="/home/kyle/.gdrive"
 GDRIVE_PARENT="0B8Hwaj3ywtn-dTVmN2FnZUpseDA"
 GDRIVE_OUTFILE="outfile"
 
-RESTORE_FILES="$HERE/restore-files.txt"
+RESTORE_FILES="$BIN/restore-files.txt"
 EXTRACT_DIR="/"
 
 [ -d "$GDRIVE_CONFIG" ] || { echo "$GDRIVE_CONFIG does not exist"; exit 1; }
@@ -73,6 +69,7 @@ rm "$GDRIVE_OUTFILE" 2>/dev/null || true
 # list restore files
 cat "$RESTORE_FILES"
 
+# confirm action
 while true; do
 	read -p "are you sure you want to restore these files to $EXTRACT_DIR?" yn
 	case $yn in
