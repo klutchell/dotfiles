@@ -5,7 +5,7 @@
 * My personal Linux server management utilities.
 * These are designed for my current setup, and likely aren't suitable for anyone else without some modification.
 * For example, some directories and usernames are hardcoded.
-* Not all of the utilities are designed by me so I do not take credit for those.
+* I am not the author of some of these utilities, I simply needed a common place to keep everything.
 
 ### How do I get set up? ###
 
