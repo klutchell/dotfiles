@@ -44,16 +44,24 @@ NZBGET_ROOT="/data/nzbget"
 TRANSMISSION_ROOT="/data/transmission"
 HYDRA_ROOT="/data/hydra"
 
-COMMON_OPT="-e PUID=$(id -u) -e PGID=$(id -g) -e TZ=$(date +%Z) -v /etc/localtime:/etc/localtime:ro -v /dev/rtc:/dev/rtc:ro --restart unless-stopped"
-
 reset_vars()
 {
 	IMAGE=
 	CONTAINER=
 	MOUNT_OPT=
 	PORT_OPT=
+	ENV_OPT=
 	OTHER_OPT=
 	UFW=
+}
+
+set_common()
+{
+	MOUNT_OPT="-v /etc/localtime:/etc/localtime:ro -v /dev/rtc:/dev/rtc:ro"
+	PORT_OPT=
+	ENV_OPT="-e PUID=$(id -u) -e PGID=$(id -g) -e TZ=$(date +%Z)"
+	OTHER_OPT="--restart unless-stopped"
+	COMMON_OPT="$MOUNT_OPT $PORT_OPT $ENV_OPT $OTHER_OPT"
 }
 
 set_plex()
@@ -62,7 +70,8 @@ set_plex()
 	CONTAINER="plex"
 	MOUNT_OPT="-v $CONFIG_ROOT/$CONTAINER:/config -v $PLEX_ROOT/tv:/data/tv -v $PLEX_ROOT/movies:/data/movies -v /tmp:/transcode"
 	PORT_OPT=
-	OTHER_OPT="--net=host -e VERSION=latest"
+	ENV_OPT="-e VERSION=latest"
+	OTHER_OPT="--net=host"
 	UFW="32400"
 }
 
@@ -72,6 +81,7 @@ set_nzbget()
 	CONTAINER="nzbget"
 	MOUNT_OPT="-v $CONFIG_ROOT/$CONTAINER:/config -v $NZBGET_ROOT:/downloads"
 	PORT_OPT="-p 6789:6789"
+	ENV_OPT=
 	OTHER_OPT=
 	UFW=
 }
@@ -82,6 +92,7 @@ set_sonarr()
 	CONTAINER="sonarr"
 	MOUNT_OPT="-v $CONFIG_ROOT/$CONTAINER:/config -v $NZBGET_ROOT:/downloads -v $PLEX_ROOT/tv:/tv"
 	PORT_OPT="-p 8989:8989"
+	ENV_OPT=
 	OTHER_OPT="--link nzbget:nzbget"
 	UFW=
 }
@@ -92,6 +103,7 @@ set_couchpotato()
 	CONTAINER="couchpotato"
 	MOUNT_OPT="-v $CONFIG_ROOT/$CONTAINER:/config -v $NZBGET_ROOT:/downloads -v $PLEX_ROOT/movies:/movies"
 	PORT_OPT="-p 5050:5050"
+	ENV_OPT=
 	OTHER_OPT="--link nzbget:nzbget"
 	UFW=
 }
@@ -102,6 +114,7 @@ set_plexpy()
 	CONTAINER="plexpy"
 	MOUNT_OPT="-v $CONFIG_ROOT/$CONTAINER:/config -v $CONFIG_ROOT/plex/logs:/logs:ro"
 	PORT_OPT="-p 8181:8181"
+	ENV_OPT=
 	OTHER_OPT=
 	UFW=
 }
@@ -112,6 +125,7 @@ set_transmission()
 	CONTAINER="transmission"
 	MOUNT_OPT="-v $CONFIG_ROOT/$CONTAINER:/config -v $TRANSMISSION_ROOT:/downloads -v $TRANSMISSION_ROOT/watch:/watch"
 	PORT_OPT="-p 9091:9091 -p 51413:51413 -p 51413:51413/udp"
+	ENV_OPT=
 	OTHER_OPT=
 	UFW="51413"
 }
@@ -122,8 +136,20 @@ set_nginx()
 	CONTAINER="nginx"
 	MOUNT_OPT="-v $CONFIG_ROOT/$CONTAINER:/config"
 	PORT_OPT="-p 80:80 -p 443:443"
+	ENV_OPT=
 	OTHER_OPT="--link nzbget:nzbget --link sonarr:sonarr --link couchpotato:couchpotato --link plexpy:plexpy --link transmission:transmission --link glances:glances"
 	UFW="80/tcp 443/tcp"
+}
+
+set_glances()
+{
+	IMAGE="docker.io/nicolargo/glances"
+	CONTAINER="glances"
+	MOUNT_OPT="-v /var/run/docker.sock:/var/run/docker.sock:ro"
+	PORT_OPT="-p 61208-61209:61208-61209"
+	ENV_OPT="-e GLANCES_OPT=-w"
+	OTHER_OPT=
+	UFW=
 }
 
 # set_nzedb()
@@ -133,6 +159,7 @@ set_nginx()
 	# CONTAINER="nzedb"
 	# # MOUNT_OPT="-v $CONFIG_ROOT/nzedb:/var/www/nZEDb"
 	# PORT_OPT="-p 8800:8800"
+	# ENV_OPT=
 	# OTHER_OPT=
 	# UFW="8800"
 # }
@@ -143,6 +170,7 @@ set_nginx()
 	# CONTAINER="hydra"
 	# MOUNT_OPT="-v $CONFIG_ROOT/hydra:/config -v $HYDRA_ROOT:/downloads"
 	# PORT_OPT="-p 5075:5075"
+	# ENV_OPT=
 	# OTHER_OPT=
 	# UFW=
 # }
@@ -153,6 +181,7 @@ set_nginx()
 	# CONTAINER="muximux"
 	# MOUNT_OPT="-v $CONFIG_ROOT/$CONTAINER:/config"
 	# PORT_OPT="-p 8080:8080"
+	# ENV_OPT=
 	# OTHER_OPT=
 	# UFW=
 # }
@@ -163,19 +192,32 @@ set_nginx()
 	# CONTAINER="htpcmanager"
 	# MOUNT_OPT="-v $CONFIG_ROOT/$CONTAINER:/config"
 	# PORT_OPT="-p 8085:8085"
+	# ENV_OPT=
 	# OTHER_OPT="---link nzbget:nzbget --link sonarr:sonarr --link couchpotato:couchpotato --link plexpy:plexpy --link transmission:transmission"
 	# UFW=
 # }
 
-set_glances()
-{
-	IMAGE="docker.io/nicolargo/glances"
-	CONTAINER="glances"
-	MOUNT_OPT="-v /var/run/docker.sock:/var/run/docker.sock:ro"
-	PORT_OPT="-p 61208-61209:61208-61209"
-	OTHER_OPT="-e GLANCES_OPT=-w"
-	UFW=
-}
+# set_munin-server()
+# {
+	# IMAGE="munin-server"
+	# CONTAINER="munin-server"
+	# MOUNT_OPT=
+	# PORT_OPT="-p 8080:8080"
+	# ENV_OPT="-e PUID=0 -e PGID=0 -e NODES=$(hostname):munin-node -e MUNIN_USER=username -e MUNIN_PASSWORD=password"
+	# OTHER_OPT="--link munin-node:munin-node"
+	# UFW="8080/tcp"
+# }
+
+# set_munin-node()
+# {
+	# IMAGE="maxwayt/munin-node"
+	# CONTAINER="munin-node"
+	# MOUNT_OPT="-v $CONFIG_ROOT/$CONTAINER:/etc/munin"
+	# PORT_OPT="-p 4949:4949 -p 4949:4949/udp"
+	# ENV_OPT="-e PUID=0 -e PGID=0"
+	# OTHER_OPT="--privileged"
+	# UFW=
+# }
 
 open_ports()
 {
@@ -195,12 +237,18 @@ close_ports()
 	done
 }
 
+escape_spaces()
+{
+	echo "$1" | sed 's|_|\\ |g'
+}
+
 docker_create()
 {
 	docker_delete || true
 	
-	echo "docker create --name $CONTAINER $MOUNT_OPT $PORT_OPT $OTHER_OPT $COMMON_OPT $IMAGE"
-	docker create --name $CONTAINER $MOUNT_OPT $PORT_OPT $OTHER_OPT $COMMON_OPT $IMAGE || exit 1
+	local cmd="docker create --name $CONTAINER $COMMON_OPT $MOUNT_OPT $PORT_OPT $ENV_OPT $OTHER_OPT $IMAGE"
+	echo $cmd
+	eval $cmd || exit 1
 	
 	open_ports
 	
@@ -280,6 +328,7 @@ pushd "$SCRATCH" >/dev/null
 
 for cont in $containers; do
 	echo
+	set_common
 	reset_vars
 	eval "set_${cont}" || usage
 	eval "docker_${1}" || usage
