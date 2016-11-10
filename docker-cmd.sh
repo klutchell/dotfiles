@@ -203,7 +203,7 @@ set_glances()
 	# CONTAINER="munin-server"
 	# MOUNT_OPT=
 	# PORT_OPT="-p 8080:8080"
-	# ENV_OPT="-e PUID=0 -e PGID=0 -e NODES=$(hostname):munin-node -e MUNIN_USER=username -e MUNIN_PASSWORD=password"
+	# ENV_OPT="NODES=$(hostname):munin-node -e MUNIN_USER=username -e MUNIN_PASSWORD=password"
 	# OTHER_OPT="--link munin-node:munin-node"
 	# UFW="8080/tcp"
 # }
@@ -214,10 +214,21 @@ set_glances()
 	# CONTAINER="munin-node"
 	# MOUNT_OPT="-v $CONFIG_ROOT/$CONTAINER:/etc/munin"
 	# PORT_OPT="-p 4949:4949 -p 4949:4949/udp"
-	# ENV_OPT="-e PUID=0 -e PGID=0"
-	# OTHER_OPT="--privileged"
+	# ENV_OPT=
+	# OTHER_OPT="--privileged=true"
 	# UFW=
 # }
+
+set_monitorix()
+{
+	IMAGE="geiseri/monitorix"
+	CONTAINER="monitorix"
+	MOUNT_OPT=
+	PORT_OPT="-p 8080:8080"
+	ENV_OPT=
+	OTHER_OPT="--privileged=true"
+	UFW="8080"
+}
 
 open_ports()
 {
