@@ -137,7 +137,7 @@ set_nginx()
 	MOUNT_OPT="-v $CONFIG_ROOT/$CONTAINER:/config"
 	PORT_OPT="-p 80:80 -p 443:443"
 	ENV_OPT=
-	OTHER_OPT="--link nzbget:nzbget --link sonarr:sonarr --link couchpotato:couchpotato --link plexpy:plexpy --link transmission:transmission --link glances:glances"
+	OTHER_OPT="--link nzbget:nzbget --link sonarr:sonarr --link couchpotato:couchpotato --link plexpy:plexpy --link transmission:transmission --link glances:glances --link dockerui:dockerui"
 	UFW="80/tcp 443/tcp"
 }
 
@@ -215,7 +215,7 @@ set_glances()
 	# MOUNT_OPT="-v $CONFIG_ROOT/$CONTAINER:/etc/munin"
 	# PORT_OPT="-p 4949:4949 -p 4949:4949/udp"
 	# ENV_OPT=
-	# OTHER_OPT="--privileged=true"
+	# OTHER_OPT="--privileged"
 	# UFW=
 # }
 
@@ -226,8 +226,21 @@ set_monitorix()
 	MOUNT_OPT=
 	PORT_OPT="-p 8080:8080"
 	ENV_OPT=
-	OTHER_OPT="--privileged=true"
+	OTHER_OPT="--privileged"
 	UFW="8080"
+}
+
+# https://github.com/kevana/ui-for-docker
+# docker run -d -p 9000:9000 --privileged -v /var/run/docker.sock:/var/run/docker.sock uifd/ui-for-docker
+set_dockerui()
+{
+	IMAGE="uifd/ui-for-docker"
+	CONTAINER="dockerui"
+	MOUNT_OPT="-v /var/run/docker.sock:/var/run/docker.sock"
+	PORT_OPT="-p 9000:9000"
+	ENV_OPT=
+	OTHER_OPT="--privileged"
+	UFW=
 }
 
 open_ports()
