@@ -130,6 +130,17 @@ set_transmission()
 	UFW="51413"
 }
 
+set_htpcmanager()
+{
+	IMAGE="linuxserver/htpcmanager"
+	CONTAINER="htpcmanager"
+	MOUNT_OPT="-v $CONFIG_ROOT/$CONTAINER:/config -v $NZBGET_ROOT:/downloads"
+	PORT_OPT="-p 8085:8085"
+	ENV_OPT=
+	OTHER_OPT="--link nzbget:nzbget --link sonarr:sonarr --link couchpotato:couchpotato --link transmission:transmission"
+	UFW=
+}
+
 set_nginx()
 {
 	IMAGE="linuxserver/nginx"
@@ -137,20 +148,43 @@ set_nginx()
 	MOUNT_OPT="-v $CONFIG_ROOT/$CONTAINER:/config"
 	PORT_OPT="-p 80:80 -p 443:443"
 	ENV_OPT=
-	OTHER_OPT="--link nzbget:nzbget --link sonarr:sonarr --link couchpotato:couchpotato --link plexpy:plexpy --link transmission:transmission --link glances:glances --link dockerui:dockerui"
+	OTHER_OPT="--link nzbget:nzbget --link sonarr:sonarr --link couchpotato:couchpotato --link plexpy:plexpy --link transmission:transmission --link dockerui:dockerui --link htpcmanager:htpcmanager"
 	UFW="80/tcp 443/tcp"
 }
 
-set_glances()
+# https://github.com/kevana/ui-for-docker
+set_dockerui()
 {
-	IMAGE="docker.io/nicolargo/glances"
-	CONTAINER="glances"
-	MOUNT_OPT="-v /var/run/docker.sock:/var/run/docker.sock:ro"
-	PORT_OPT="-p 61208-61209:61208-61209"
-	ENV_OPT="-e GLANCES_OPT=-w"
-	OTHER_OPT=
+	IMAGE="uifd/ui-for-docker"
+	CONTAINER="dockerui"
+	MOUNT_OPT="-v /var/run/docker.sock:/var/run/docker.sock"
+	PORT_OPT="-p 9000:9000"
+	ENV_OPT=
+	OTHER_OPT="--privileged"
 	UFW=
 }
+
+# set_glances()
+# {
+	# IMAGE="docker.io/nicolargo/glances"
+	# CONTAINER="glances"
+	# MOUNT_OPT="-v /var/run/docker.sock:/var/run/docker.sock:ro"
+	# PORT_OPT="-p 61208-61209:61208-61209"
+	# ENV_OPT="-e GLANCES_OPT=-w"
+	# OTHER_OPT=
+	# UFW=
+# }
+
+# set_monitorix()
+# {
+	# IMAGE="geiseri/monitorix"
+	# CONTAINER="monitorix"
+	# MOUNT_OPT=
+	# PORT_OPT="-p 8080:8080"
+	# ENV_OPT=
+	# OTHER_OPT="--privileged"
+	# UFW=
+# }
 
 # set_nzedb()
 # {
@@ -186,17 +220,6 @@ set_glances()
 	# UFW=
 # }
 
-# set_htpcmanager()
-# {
-	# IMAGE="linuxserver/htpcmanager"
-	# CONTAINER="htpcmanager"
-	# MOUNT_OPT="-v $CONFIG_ROOT/$CONTAINER:/config"
-	# PORT_OPT="-p 8085:8085"
-	# ENV_OPT=
-	# OTHER_OPT="---link nzbget:nzbget --link sonarr:sonarr --link couchpotato:couchpotato --link plexpy:plexpy --link transmission:transmission"
-	# UFW=
-# }
-
 # set_munin-server()
 # {
 	# IMAGE="munin-server"
@@ -218,30 +241,6 @@ set_glances()
 	# OTHER_OPT="--privileged"
 	# UFW=
 # }
-
-set_monitorix()
-{
-	IMAGE="geiseri/monitorix"
-	CONTAINER="monitorix"
-	MOUNT_OPT=
-	PORT_OPT="-p 8080:8080"
-	ENV_OPT=
-	OTHER_OPT="--privileged"
-	UFW="8080"
-}
-
-# https://github.com/kevana/ui-for-docker
-# docker run -d -p 9000:9000 --privileged -v /var/run/docker.sock:/var/run/docker.sock uifd/ui-for-docker
-set_dockerui()
-{
-	IMAGE="uifd/ui-for-docker"
-	CONTAINER="dockerui"
-	MOUNT_OPT="-v /var/run/docker.sock:/var/run/docker.sock"
-	PORT_OPT="-p 9000:9000"
-	ENV_OPT=
-	OTHER_OPT="--privileged"
-	UFW=
-}
 
 open_ports()
 {
@@ -340,7 +339,7 @@ usage()
 
 case $2 in
 	"all")
-		containers="nzbget sonarr couchpotato plex plexpy transmission glances nginx";;
+		containers="nzbget sonarr couchpotato plex plexpy transmission htpcmanager dockerui nginx";;
 	"")
 		usage;;
 	*)
