@@ -141,6 +141,19 @@ set_htpcmanager()
 	UFW=
 }
 
+# https://github.com/firehol/netdata
+# https://hub.docker.com/r/titpetric/netdata/
+set_netdata()
+{
+	IMAGE="titpetric/netdata"
+	CONTAINER="netdata"
+	MOUNT_OPT="-v /var/run/docker.sock:/var/run/docker.sock -v /proc:/host/proc:ro -v /sys:/host/sys:ro"
+	PORT_OPT="-p 19999:19999"
+	ENV_OPT=
+	OTHER_OPT="--cap-add SYS_PTRACE"
+	UFW=
+}
+
 set_nginx()
 {
 	IMAGE="linuxserver/nginx"
@@ -148,7 +161,7 @@ set_nginx()
 	MOUNT_OPT="-v $CONFIG_ROOT/$CONTAINER:/config"
 	PORT_OPT="-p 80:80 -p 443:443"
 	ENV_OPT=
-	OTHER_OPT="--link nzbget:nzbget --link sonarr:sonarr --link couchpotato:couchpotato --link plexpy:plexpy --link transmission:transmission --link dockerui:dockerui --link htpcmanager:htpcmanager"
+	OTHER_OPT="--link netdata:netdata --link nzbget:nzbget --link sonarr:sonarr --link couchpotato:couchpotato --link plexpy:plexpy --link transmission:transmission --link dockerui:dockerui --link htpcmanager:htpcmanager"
 	UFW="80/tcp 443/tcp"
 }
 
