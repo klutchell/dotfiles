@@ -256,7 +256,7 @@ install_docker()
 	# https://svenv.nl/unixandlinux/dockerufw
 	#sudo sh -c 'echo -e "*nat\n:POSTROUTING ACCEPT [0:0]\n-A POSTROUTING ! -o docker0 -s 172.17.0.0/16 -j MASQUERADE\nCOMMIT\n$(cat /etc/ufw/before.rules)" > /etc/ufw/before.rules'
 	sudo awk '!NF&&a==""{print "\n*nat\n:POSTROUTING ACCEPT [0:0]\n-A POSTROUTING ! -o docker0 -s 172.17.0.0/16 -j MASQUERADE\nCOMMIT\n";a=1}1' /etc/ufw/before.rules > before.rules
-	sudo cat before.rules > /etc/ufw/before.rules
+	sudo mv before.rules /etc/ufw/before.rules
 	sudo sed -i 's|DEFAULT_FORWARD_POLICY=.*|DEFAULT_FORWARD_POLICY="ACCEPT"|' /etc/default/ufw
 	sudo ufw reload
 	sudo ufw allow 2375/tcp
