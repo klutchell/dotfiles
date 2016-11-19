@@ -93,7 +93,7 @@ set_sonarr()
 	MOUNT_OPT="-v $CONFIG_ROOT/$CONTAINER:/config -v $NZBGET_ROOT:/downloads -v $PLEX_ROOT/tv:/tv"
 	PORT_OPT="-p 8989:8989"
 	ENV_OPT=
-	OTHER_OPT="--link nzbget:nzbget"
+	OTHER_OPT="--link nzbget:nzbget --link hydra:hydra"
 	UFW=
 }
 
@@ -104,7 +104,7 @@ set_couchpotato()
 	MOUNT_OPT="-v $CONFIG_ROOT/$CONTAINER:/config -v $NZBGET_ROOT:/downloads -v $PLEX_ROOT/movies:/movies"
 	PORT_OPT="-p 5050:5050"
 	ENV_OPT=
-	OTHER_OPT="--link nzbget:nzbget"
+	OTHER_OPT="--link nzbget:nzbget --link hydra:hydra"
 	UFW=
 }
 
@@ -154,17 +154,6 @@ set_netdata()
 	UFW=
 }
 
-set_nginx()
-{
-	IMAGE="linuxserver/nginx"
-	CONTAINER="nginx"
-	MOUNT_OPT="-v $CONFIG_ROOT/$CONTAINER:/config"
-	PORT_OPT="-p 80:80 -p 443:443"
-	ENV_OPT=
-	OTHER_OPT="--link netdata:netdata --link nzbget:nzbget --link sonarr:sonarr --link couchpotato:couchpotato --link plexpy:plexpy --link transmission:transmission --link dockerui:dockerui --link htpcmanager:htpcmanager"
-	UFW="80/tcp 443/tcp"
-}
-
 # https://github.com/kevana/ui-for-docker
 set_dockerui()
 {
@@ -175,6 +164,50 @@ set_dockerui()
 	ENV_OPT=
 	OTHER_OPT="--privileged"
 	UFW=
+}
+
+set_hydra()
+{
+	IMAGE="linuxserver/hydra"
+	CONTAINER="hydra"
+	MOUNT_OPT="-v $CONFIG_ROOT/hydra:/config -v $HYDRA_ROOT:/downloads"
+	PORT_OPT="-p 5075:5075"
+	ENV_OPT=
+	OTHER_OPT="--link nzbget:nzbget"
+	UFW=
+}
+
+# https://github.com/razorgirl/nzedb-docker
+# https://hub.docker.com/r/bsmith1988/nzedb-docker/
+# set_nzedb()
+# {
+	# # IMAGE="nzedb/master"
+	# IMAGE="bsmith1988/nzedb-docker"
+	# CONTAINER="nzedb"
+	# MOUNT_OPT="-v $CONFIG_ROOT/nzedb:/var/www/nZEDb"
+	# PORT_OPT="-p 8800:8800"
+	# ENV_OPT=
+	# OTHER_OPT=
+	# UFW="8800"
+# }
+
+set_nginx()
+{
+	IMAGE="linuxserver/nginx"
+	CONTAINER="nginx"
+	MOUNT_OPT="-v $CONFIG_ROOT/$CONTAINER:/config"
+	PORT_OPT="-p 80:80 -p 443:443"
+	ENV_OPT=
+	OTHER_OPT="--link hydra:hydra \
+--link netdata:netdata \
+--link nzbget:nzbget \
+--link sonarr:sonarr \
+--link couchpotato:couchpotato \
+--link plexpy:plexpy \
+--link transmission:transmission \
+--link dockerui:dockerui \
+--link htpcmanager:htpcmanager"
+	UFW="80/tcp 443/tcp"
 }
 
 # set_glances()
@@ -196,29 +229,6 @@ set_dockerui()
 	# PORT_OPT="-p 8080:8080"
 	# ENV_OPT=
 	# OTHER_OPT="--privileged"
-	# UFW=
-# }
-
-# set_nzedb()
-# {
-	# # IMAGE="bsmith1988/nzedb-docker"
-	# IMAGE="nzedb/master"
-	# CONTAINER="nzedb"
-	# # MOUNT_OPT="-v $CONFIG_ROOT/nzedb:/var/www/nZEDb"
-	# PORT_OPT="-p 8800:8800"
-	# ENV_OPT=
-	# OTHER_OPT=
-	# UFW="8800"
-# }
-
-# set_hydra()
-# {
-	# IMAGE="linuxserver/hydra"
-	# CONTAINER="hydra"
-	# MOUNT_OPT="-v $CONFIG_ROOT/hydra:/config -v $HYDRA_ROOT:/downloads"
-	# PORT_OPT="-p 5075:5075"
-	# ENV_OPT=
-	# OTHER_OPT=
 	# UFW=
 # }
 
@@ -276,6 +286,13 @@ close_ports()
 escape_spaces()
 {
 	echo "$1" | sed 's|_|\\ |g'
+}
+
+docker_connect()
+{
+	local cmd="docker exec -it $CONTAINER /bin/bash"
+	echo $cmd
+	eval $cmd || exit 1
 }
 
 docker_create()
@@ -343,16 +360,16 @@ usage()
 {
 	echo "usage: $THIS <action> <container>"
 	echo "actions:"
-	compgen -A function docker_ | sed -r 's|^docker_(.+)$| \1|'
+	compgen -A function | sed -rn 's|^docker_(.+)$| \1|p'
 	echo "containers:"
 	echo " all"
-	compgen -A function create_ | sed -r 's|^create_(.+)$| \1|'
+	compgen -A function | sed -rn 's|^create_(.+)$| \1|p'
 	exit 1
 }
 
 case $2 in
 	"all")
-		containers="nzbget sonarr couchpotato plex plexpy transmission htpcmanager dockerui nginx";;
+		containers="nzbget hydra sonarr couchpotato plex plexpy transmission htpcmanager dockerui nginx";;
 	"")
 		usage;;
 	*)
@@ -363,7 +380,6 @@ esac
 pushd "$SCRATCH" >/dev/null
 
 for cont in $containers; do
-	echo
 	set_common
 	reset_vars
 	eval "set_${cont}" || usage
@@ -371,11 +387,6 @@ for cont in $containers; do
 done
 
 # list containers
-echo
 docker ps -a
-
-# list images
-echo
-docker images
 
 popd >/dev/null
