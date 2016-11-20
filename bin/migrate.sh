@@ -51,12 +51,13 @@ confirm_action()
 
 migrate_all()
 {
-	rsync --bwlimit=$BWLIMIT -Pavzhe ssh --files-from="$PATH_LIST" / kyle@$DEST_IP:/
+	rsync --bwlimit=$BWLIMIT -Pavzhe ssh --relative $MIGRATE_PATHS $DESTINATION:/
 }
 
 migrate_test()
 {
-	rsync --bwlimit=$BWLIMIT -Pavzhe ssh --dry-run --files-from="$PATH_LIST" / kyle@$DEST_IP:/
+	# rsync --bwlimit=$BWLIMIT -Pavzhe ssh --dry-run --include-from="$PATH_LIST" / $DESTINATION:/
+	rsync --bwlimit=$BWLIMIT -Pavzhe ssh --dry-run --relative $MIGRATE_PATHS $DESTINATION:/
 }
 
 usage()
@@ -70,21 +71,16 @@ usage()
 # snapshots config
 MIGRATE_CONFIG="$BIN/migrate.conf"
 ACTION="$1"
-DEST_IP="$2"
+DESTINATION="$2"
 
 [ -f "$MIGRATE_CONFIG" ] || { echo "MIGRATE_CONFIG '$MIGRATE_CONFIG' does not exist"; exit 1; }
 [ -n "$ACTION" ] || usage
-[ -n "$DEST_IP" ] || usage
+[ -n "$DESTINATION" ] || usage
 
 . "$MIGRATE_CONFIG"
 
 # move to scratch
 pushd "$SCRATCH" >/dev/null
-
-PATH_LIST=path_list.tmp
-for file in $MIGRATE_PATHS; do
-	echo "$file" >> "$PATH_LIST"
-done
 
 eval "migrate_${ACTION}" || usage
 
