@@ -51,13 +51,12 @@ confirm_action()
 
 migrate_all()
 {
-	rsync --bwlimit=$BWLIMIT -Pavzhe ssh --relative $MIGRATE_PATHS $DESTINATION:/
+	rsync -arzPvhe ssh --bwlimit=$BWLIMIT --no-implied-dirs --relative --files-from="$FILES_FROM" / $DESTINATION:/
 }
 
 migrate_test()
 {
-	# rsync --bwlimit=$BWLIMIT -Pavzhe ssh --dry-run --include-from="$PATH_LIST" / $DESTINATION:/
-	rsync --bwlimit=$BWLIMIT -Pavzhe ssh --dry-run --relative $MIGRATE_PATHS $DESTINATION:/
+	rsync -arzPvhe ssh --bwlimit=$BWLIMIT --no-implied-dirs --relative --dry-run --files-from="$FILES_FROM" / $DESTINATION:/
 }
 
 usage()
@@ -81,6 +80,12 @@ DESTINATION="$2"
 
 # move to scratch
 pushd "$SCRATCH" >/dev/null
+
+FILES_FROM=files_from.tmp
+rm "$FILES_FROM" 2>/dev/null || true
+for file in $MIGRATE_PATHS; do
+	echo "$file" >> "$FILES_FROM"
+done
 
 eval "migrate_${ACTION}" || usage
 
