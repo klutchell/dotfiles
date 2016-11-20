@@ -40,16 +40,8 @@ fi
 
 install_lynis()
 {
-	# https://cisofy.com/download/lynis/
-	# download
-	wget https://cisofy.com/files/lynis-2.4.0.tar.gz
-	
-	# extract
-	tar xvf lynis-2.4.0.tar.gz
-	
-	# install
-	mv lynis /opt/
-	chown -R root:root /opt/lynis
+	# https://cisofy.com/documentation/lynis/get-started/#installation-package
+	apt-get install "lynis" -y
 }
 
 install_hdparm()
@@ -236,14 +228,18 @@ install_docker()
 
 	# disable iptable modifications
 	# https://fralef.me/docker-and-iptables.html
-	mkdir /etc/systemd/system/docker.service.d || true
-	echo -e "[Service]\nExecStart=\nExecStart=/usr/bin/docker daemon -H fd:// --iptables=false --dns 8.8.8.8 --dns 8.8.4.4\n" > /etc/systemd/system/docker.service.d/noiptables.conf
-	systemctl daemon-reload
+	if [ ! -f "/etc/systemd/system/docker.service.d/noiptables.conf" ]; then
+		mkdir /etc/systemd/system/docker.service.d 2>/dev/null || true
+		echo -e "[Service]\nExecStart=\nExecStart=/usr/bin/docker daemon -H fd:// --iptables=false --dns 8.8.8.8 --dns 8.8.4.4\n" > /etc/systemd/system/docker.service.d/noiptables.conf
+		systemctl daemon-reload
+	fi
 
 	# configure firewall
 	# https://svenv.nl/unixandlinux/dockerufw
-	awk '!NF&&a==""{print "\n*nat\n:POSTROUTING ACCEPT [0:0]\n-A POSTROUTING ! -o docker0 -s 172.17.0.0/16 -j MASQUERADE\nCOMMIT\n";a=1}1' /etc/ufw/before.rules > /etc/ufw/before.rules.tmp
-	mv /etc/ufw/before.rules.tmp /etc/ufw/before.rules
+	if ! grep -q "docker0" /etc/ufw/before.rules; then
+		awk '!NF&&a==""{print "\n*nat\n:POSTROUTING ACCEPT [0:0]\n-A POSTROUTING ! -o docker0 -s 172.17.0.0/16 -j MASQUERADE\nCOMMIT\n";a=1}1' /etc/ufw/before.rules > /etc/ufw/before.rules.tmp
+		mv /etc/ufw/before.rules.tmp /etc/ufw/before.rules
+	fi
 	
 	sed -i 's|DEFAULT_FORWARD_POLICY=.*|DEFAULT_FORWARD_POLICY="ACCEPT"|' /etc/default/ufw
 	ufw reload
