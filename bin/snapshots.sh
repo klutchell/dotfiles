@@ -65,6 +65,7 @@ snapshot_list()
 {
 	# list snapshots
 	/usr/sbin/gdrive -c "$GDRIVE_CONFIG" list --query "'$GDRIVE_PARENT' in parents and trashed = false" --order "createdTime desc" > "$GDRIVE_OUTFILE"
+	SNAPSHOT_COUNT="$(($(cat $GDRIVE_OUTFILE | wc -l)-1))"
 	cat "$GDRIVE_OUTFILE"
 }
 
@@ -90,13 +91,12 @@ snapshot_upload()
 	fi
 
 	# delete oldest
-	SNAPSHOT_COUNT="$(($(cat $GDRIVE_OUTFILE | wc -l)-1))"
-	if [ "$SNAPSHOT_COUNT" -gt 7 ]; then
+	snapshot_list
+	while [ "$SNAPSHOT_COUNT" -gt "$MAX_TO_KEEP" ]; do
 		FILE_ID="$(tail -n1 $GDRIVE_OUTFILE | cut -d' ' -f1)"
 		/usr/sbin/gdrive -c "$GDRIVE_CONFIG" delete "$FILE_ID"
-	fi
-	
-	snapshot_list
+		snapshot_list
+	done
 }
 
 snapshot_download()
