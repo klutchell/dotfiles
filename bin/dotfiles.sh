@@ -52,6 +52,10 @@ dotfiles_add()
 		[ "$file" = "dotfiles" ] && continue
 		dot_file="dotfiles/$file"
 		
+		if [ -L "$file" ] && [ "$(readlink "$file")" = "$dot_file" ]; then
+			continue
+		fi
+		
 		echo "add $file to dotfiles?"
 		confirm_action || continue
 		
@@ -77,15 +81,15 @@ dotfiles_install()
 	for file in $(find ~/dotfiles -maxdepth 1 -mindepth 1 ! -type l -exec basename {} \;)
 	do
 		[ "$file" = "README.md" ] && continue
+		[ "$file" = ".git" ] && continue
 		dot_file="dotfiles/$file"
+		
+		if [ -L "$file" ] && [ "$(readlink "$file")" = "$dot_file" ]; then
+			continue
+		fi
 		
 		echo "install $file from dotfiles?"
 		confirm_action || continue
-		
-		if [ -L "$file" ] && [ "$(readlink "$file")" = "$dot_file" ]; then
-			echo "removing existing link..."
-			rm "$file"
-		fi
 		
 		if [ -e "$file" ]; then
 			echo "$file already exists"
@@ -107,13 +111,14 @@ dotfiles_uninstall()
 	for file in $(find ~/dotfiles -maxdepth 1 -mindepth 1 ! -type l -exec basename {} \;)
 	do
 		[ "$file" = "README.md" ] && continue
+		[ "$file" = ".git" ] && continue
 		dot_file="dotfiles/$file"
 		
 		echo "remove $file from dotfiles?"
 		confirm_action || continue
 		
 		if [ -L "$file" ] && [ "$(readlink "$file")" = "$dot_file" ]; then
-			echo "removing existing link..."
+			echo "removing link..."
 			rm "$file"
 		fi
 		

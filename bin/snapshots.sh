@@ -95,6 +95,8 @@ snapshot_upload()
 		FILE_ID="$(tail -n1 $GDRIVE_OUTFILE | cut -d' ' -f1)"
 		/usr/sbin/gdrive -c "$GDRIVE_CONFIG" delete "$FILE_ID"
 	fi
+	
+	snapshot_list
 }
 
 snapshot_download()

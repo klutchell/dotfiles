@@ -1,3 +1,29 @@
 [user]
 	email = kylemharding@gmail.com
 	name = Kyle Harding
+
+[core]
+	editor = vim
+	ignorecase = false
+
+[push]
+	default = simple
+
+[color "diff"]
+	meta = yellow bold ul  
+	frag = cyan bold ul
+	old = red bold  
+	new = green bold
+ 
+[color "status"]  
+	added = green bold  
+	changed = yellow bold  
+	untracked = red bold
+
+[grep]
+	break = true
+	heading = true
+	lineNumber = true
+
+[alias]
+	g = grep --extended-regexp --break --heading --line-number
