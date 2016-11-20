@@ -163,7 +163,8 @@ SKIP_FILES='
 README.md
 .git
 *.backup
-dotfiles'
+dotfiles
+etc'
 
 eval "dotfiles_${1}" || usage
 
