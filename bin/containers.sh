@@ -369,7 +369,7 @@ usage()
 
 case $2 in
 	"all")
-		containers="nzbget hydra sonarr couchpotato plex plexpy transmission htpcmanager dockerui nginx";;
+		containers="nzbget hydra sonarr couchpotato plex plexpy transmission htpcmanager dockerui netdata nginx";;
 	"")
 		usage;;
 	*)
