@@ -40,7 +40,8 @@ fi
 
 # snapshots config
 SNAPSHOTS_CONFIG="$BIN/snapshots.conf"
-GDRIVE_OUTFILE=outfile.tmp
+GDRIVE_OUTFILE=gdrive_outfile.tmp
+PATH_LIST=path_list.tmp
 
 [ -f "$SNAPSHOTS_CONFIG" ] || { echo "SNAPSHOTS_CONFIG '$SNAPSHOTS_CONFIG' does not exist"; exit 1; }
 
@@ -48,7 +49,17 @@ GDRIVE_OUTFILE=outfile.tmp
 
 [ -d "$GDRIVE_CONFIG" ] || { echo "GDRIVE_CONFIG '$GDRIVE_CONFIG' is not valid"; exit 1; }
 [ -n "$GDRIVE_PARENT" ] || { echo "GDRIVE_PARENT '$GDRIVE_PARENT' is not valid"; exit 1; }
-[ -d "$SNAPSHOT_DIR" ] || { echo "SNAPSHOT_DIR '$SNAPSHOT_DIR' is not valid"; exit 1; }
+
+confirm_action()
+{
+	while true; do
+		read -p "(y/N): " yn
+		case $yn in
+			[Yy]* ) return 0;;
+			* ) return 1;;
+		esac
+	done
+}
 
 snapshot_list()
 {
@@ -59,6 +70,8 @@ snapshot_list()
 
 snapshot_upload()
 {
+	[ -d "$SNAPSHOT_DIR" ] || { echo "SNAPSHOT_DIR '$SNAPSHOT_DIR' is not valid"; exit 1; }
+	
 	# tarball name includes timestamp of the snapshot dir
 	TARBALL="$(hostname)_$(date -r "$SNAPSHOT_DIR" +%Y.%m.%d_%H.%M.%S).tar.gz"
 
@@ -86,9 +99,11 @@ snapshot_upload()
 
 snapshot_download()
 {
-	# extract to filesystem root
-	EXTRACT_DIR="/"
-
+	[ -n "$EXTRACT_DIR" ] || { echo "EXTRACT_DIR '$EXTRACT_DIR' is not valid"; exit 1; }
+	[ -n "$RESTORE_PATHS" ] || { echo "RESTORE_PATHS '$RESTORE_PATHS' is not valid"; exit 1; }
+	
+	snapshot_list
+	
 	while true; do
 		read -p "enter file id:" FILE_ID
 		grep -q "$FILE_ID" "$GDRIVE_OUTFILE" && break
@@ -98,24 +113,23 @@ snapshot_download()
 	# download file
 	rm "$GDRIVE_OUTFILE" 2>/dev/null || true
 	/usr/sbin/gdrive -c "$GDRIVE_CONFIG" download --stdout "$FILE_ID" > "$GDRIVE_OUTFILE"
+	
+	rm "$PATH_LIST" 2>/dev/null || true
+	for path in $RESTORE_PATHS; do
+		echo "$path" >> "$PATH_LIST"
+	done
 
 	# list restore files
-	cat "$RESTORE_FILES"
+	cat "$PATH_LIST"
 
 	# confirm action
-	while true; do
-		read -p "are you sure you want to restore these files to $EXTRACT_DIR?" yn
-		case $yn in
-			[Yy]* ) break;;
-			[Nn]* ) exit;;
-			* ) echo "please answer yes or no";;
-		esac
-	done
+	echo "are you sure you want to restore these files to $EXTRACT_DIR?"
+	confirm_action || exit
 
 	# extract
 	echo "extracting files to $EXTRACT_DIR..."
 	mkdir "$EXTRACT_DIR" 2>/dev/null || true
-	tar xzpvf "$GDRIVE_OUTFILE" -C "$EXTRACT_DIR" -T "$RESTORE_FILES"
+	tar xzpvf "$GDRIVE_OUTFILE" -C "$EXTRACT_DIR" -T "$PATH_LIST"
 }
 
 usage()
