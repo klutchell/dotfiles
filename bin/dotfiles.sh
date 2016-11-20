@@ -44,27 +44,43 @@ confirm_action()
 	done
 }
 
+dotfiles_status()
+{
+	# iterate over files/folders in home (not links)
+	for file in $(find ~ -maxdepth 1 -mindepth 1 ! -type l $(printf "! -name %s " $SKIP_FILES) -exec basename {} \;)
+	do
+		echo "Unmanaged: $file"
+	done
+	
+	# iterate over files/folders in home/dotfiles (not links)
+	for file in $(find ~/dotfiles -maxdepth 1 -mindepth 1 ! -type l $(printf "! -name %s " $SKIP_FILES) -exec basename {} \;)
+	do
+		dot_file="dotfiles/$file"
+		if [ -L "$file" ] && [ "$(readlink "$file")" = "$dot_file" ]; then
+			echo "Installed: $file -> $dot_file"
+		else
+			echo "Not Installed: $file"
+		fi
+	done
+}
+
 dotfiles_add()
 {
-	# iterate over files/folders in home
-	for file in $(find ~ -maxdepth 1 -mindepth 1 ! -type l -exec basename {} \;)
+	# iterate over files/folders in home (not links)
+	for file in $(find ~ -maxdepth 1 -mindepth 1 ! -type l $(printf "! -name %s " $SKIP_FILES) -exec basename {} \;)
 	do
-		[ "$file" = "dotfiles" ] && continue
 		dot_file="dotfiles/$file"
-		
-		if [ -L "$file" ] && [ "$(readlink "$file")" = "$dot_file" ]; then
-			continue
-		fi
 		
 		echo "add $file to dotfiles?"
 		confirm_action || continue
 		
 		if [ -e "$dot_file" ]; then
-			echo "this will replace the existing $dot_file"
+			echo "$dot_file already exists"
+			echo "rename it to $dot_file.backup?"
 			confirm_action || continue
 			
-			echo "removing $dot_file..."
-			rm -rf "$dot_file"
+			echo "renaming $dot_file to $dot_file.backup..."
+			mv "$dot_file" "$dot_file.backup"
 		fi
 		
 		echo "moving $file to $dot_file..."
@@ -77,11 +93,9 @@ dotfiles_add()
 
 dotfiles_install()
 {
-	# iterate over files/folders in home/dotfiles
-	for file in $(find ~/dotfiles -maxdepth 1 -mindepth 1 ! -type l -exec basename {} \;)
+	# iterate over files/folders in home/dotfiles (not links)
+	for file in $(find ~/dotfiles -maxdepth 1 -mindepth 1 ! -type l $(printf "! -name %s " $SKIP_FILES) -exec basename {} \;)
 	do
-		[ "$file" = "README.md" ] && continue
-		[ "$file" = ".git" ] && continue
 		dot_file="dotfiles/$file"
 		
 		if [ -L "$file" ] && [ "$(readlink "$file")" = "$dot_file" ]; then
@@ -107,11 +121,9 @@ dotfiles_install()
 
 dotfiles_uninstall()
 {
-	# iterate over files/folders in home/dotfiles
-	for file in $(find ~/dotfiles -maxdepth 1 -mindepth 1 ! -type l -exec basename {} \;)
+	# iterate over files/folders in home/dotfiles (not links)
+	for file in $(find ~/dotfiles -maxdepth 1 -mindepth 1 ! -type l $(printf "! -name %s " $SKIP_FILES) -exec basename {} \;)
 	do
-		[ "$file" = "README.md" ] && continue
-		[ "$file" = ".git" ] && continue
 		dot_file="dotfiles/$file"
 		
 		echo "remove $file from dotfiles?"
@@ -136,16 +148,6 @@ dotfiles_uninstall()
 	done
 }
 
-dotfiles_status()
-{
-	# print current links
-	for file in $(find ~ -maxdepth 1 -mindepth 1 -exec basename {} \;)
-	do
-		[ -n "$(readlink $file)" ] && echo "$file --> $(readlink $file)"
-		[ -n "$(readlink $file)" ] || echo "$file"
-	done
-}
-
 usage()
 {
 	echo "usage: $THIS [action]"
@@ -157,10 +159,12 @@ usage()
 # move to home
 pushd ~/ >/dev/null
 
-dotfiles_status
+SKIP_FILES='
+README.md
+.git
+*.backup
+dotfiles'
 
 eval "dotfiles_${1}" || usage
-
-dotfiles_status
 
 popd >/dev/null
