@@ -131,14 +131,6 @@ dotfiles_uninstall()
 	done
 }
 
-usage()
-{
-	echo "usage: $THIS [action]"
-	echo "actions:"
-	compgen -A function | sed -rn 's|^dotfiles_(.+)$| \1|p'
-	exit 1
-}
-
 dotfiles_status()
 {
 	# print current links
@@ -147,6 +139,14 @@ dotfiles_status()
 		[ -n "$(readlink $file)" ] && echo "$file --> $(readlink $file)"
 		[ -n "$(readlink $file)" ] || echo "$file"
 	done
+}
+
+usage()
+{
+	echo "usage: $THIS [action]"
+	echo "actions:"
+	compgen -A function | sed -rn 's|^dotfiles_(.+)$| \1|p'
+	exit 1
 }
 
 # move to home

@@ -33,22 +33,10 @@ echo $$ > "$PID"
 # print arguments
 echo "running $THIS $@"
 
-if [ "$(id -u)" = "0" ]; then
-	echo "This script should not be run as root" 1>&2
+if [ "$(id -u)" != "0" ]; then
+	echo "This script must be run as root" 1>&2
 	exit 1
 fi
-
-apt_install()
-{
-	# check if already installed
-	if [ "$(dpkg-query -W -f='${Status}' "$1" 2>/dev/null | grep -c "ok installed")" -eq 1 ]; then
-		echo "package $1 is already installed" && return
-	fi
-
-	# install
-	sudo apt-get update
-	sudo apt-get install "$1" -y
-}
 
 install_lynis()
 {
@@ -60,13 +48,13 @@ install_lynis()
 	tar xvf lynis-2.4.0.tar.gz
 	
 	# install
-	sudo mv lynis /opt/
-	sudo chown -R root:root /opt/lynis
+	mv lynis /opt/
+	chown -R root:root /opt/lynis
 }
 
 install_hdparm()
 {
-	apt_install "hdparm"
+	apt-get install "hdparm" -y
 }
 
 install_glances()
@@ -89,9 +77,9 @@ install_rclone()
 	cd rclone-*-linux-amd64
 
 	# install
-	sudo cp rclone /usr/sbin/
-	sudo chown root:root /usr/sbin/rclone
-	sudo chmod 755 /usr/sbin/rclone
+	cp rclone /usr/sbin/
+	chown root:root /usr/sbin/rclone
+	chmod 755 /usr/sbin/rclone
 }
 
 install_gdrive()
@@ -100,15 +88,15 @@ install_gdrive()
 	wget 'https://docs.google.com/uc?id=0B3X9GlR6EmbnQ0FtZmJJUXEyRTA&export=download' -O gdrive-linux-x64
 
 	# install
-	sudo cp gdrive-linux-x64 /usr/sbin/gdrive
-	sudo chown root:root /usr/sbin/gdrive
-	sudo chmod 755 /usr/sbin/gdrive
+	cp gdrive-linux-x64 /usr/sbin/gdrive
+	chown root:root /usr/sbin/gdrive
+	chmod 755 /usr/sbin/gdrive
 }
 
 install_unionfs()
 {
 	# install
-	apt_install "unionfs-fuse"
+	apt-get install "unionfs-fuse" -y
 }
 
 install_acdcli()
@@ -117,106 +105,106 @@ install_acdcli()
 	install_pip
 
 	# install
-	sudo pip3 install --upgrade git+https://github.com/yadayada/acd_cli.git
+	pip3 install --upgrade git+https://github.com/yadayada/acd_cli.git
 }
 
 install_unzip()
 {
 	# install
-	apt_install "unzip"
+	apt-get install "unzip" -y
 }
 
 install_pip()
 {
 	# install
-	apt_install "python-pip"
+	apt-get install "python-pip" -y
 }
 
 install_python()
 {
 	# install
-	apt_install "python"
+	apt-get install "python" -y
 }
 
 install_cifs()
 {
 	# install
-	apt_install "cifs-utils"
+	apt-get install "cifs-utils" -y
 }
 
 install_encfs()
 {
 	# install
-	apt_install "encfs"
+	apt-get install "encfs" -y
 
 	# allow other
-	sudo sed -i 's|#user_allow_other|user_allow_other|' /etc/fuse.conf
+	sed -i 's|#user_allow_other|user_allow_other|' /etc/fuse.conf
 }
 
 install_moreutils()
 {
 	# install
-	apt_install "moreutils"
+	apt-get install "moreutils" -y
 }
 
 install_ufw()
 {
 	# install
-	apt_install "ufw"
+	apt-get install "ufw" -y
 }
 
 install_ntp()
 {
 	# set timezone
-	sudo timedatectl set-timezone 'America/New_York'
+	timedatectl set-timezone 'America/New_York'
 
 	# install
-	apt_install "ntp"
+	apt-get install "ntp" -y
 
 	# configure firewall
-	sudo ufw allow 'ntp'
+	ufw allow 'ntp'
 }
 
 install_openssh()
 {
 	# install
-	apt_install "openssh-server"
+	apt-get install "openssh-server" -y
 
 	# configure firewall
-	sudo ufw allow 'OpenSSH'
+	ufw allow 'OpenSSH'
 }
 
 install_fail2ban()
 {
 	# install
-	apt_install "fail2ban"
+	apt-get install "fail2ban" -y
 }
 
 install_nginx()
 {
 	# install
-	apt_install "nginx"
+	apt-get install "nginx" -y
 
 	# configure firewall
-	sudo ufw allow 'Nginx Full'
+	ufw allow 'Nginx Full'
 }
 
 install_nano()
 {
 	# install
-	apt_install "nano"
+	apt-get install "nano" -y
 }
 
 install_git()
 {
 	# install
-	apt_install "git"
+	apt-get install "git" -y
 }
 
 install_rsnapshot()
 {
 	# install
-	apt_install "rsnapshot"
+	apt-get install "rsnapshot" -y
 }
 
 install_docker()
@@ -229,49 +217,46 @@ install_docker()
 	# https://docs.docker.com/engine/installation/linux/ubuntulinux/
 
 	# prerequisites
-	sudo apt-get update
-	sudo apt-get install apt-transport-https ca-certificates -y
-	sudo apt-get install linux-image-extra-$(uname -r) linux-image-extra-virtual -y
+	apt-get update
+	apt-get install apt-transport-https ca-certificates -y
+	apt-get install linux-image-extra-$(uname -r) linux-image-extra-virtual -y
 
 	# add key
-	sudo apt-get install gnupg -y
-	sudo apt-key adv --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys 58118E89F3A912897C070ADBF76221572C52609D
-	sudo echo "deb https://apt.dockerproject.org/repo ubuntu-xenial main" | sudo tee /etc/apt/sources.list.d/docker.list
+	apt-get install gnupg -y
+	apt-key adv --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys 58118E89F3A912897C070ADBF76221572C52609D
+	echo "deb https://apt.dockerproject.org/repo ubuntu-xenial main" | tee /etc/apt/sources.list.d/docker.list
 
 	# install
-	sudo apt-get update
-	sudo apt-get install docker-engine -y
+	apt-get update
+	apt-get install docker-engine -y
 
 	# configure user
-	sudo groupadd docker || true
-	sudo usermod -aG docker "$(whoami)" || true
+	groupadd docker || true
+	usermod -aG docker "kyle" || true
 
 	# disable iptable modifications
 	# https://fralef.me/docker-and-iptables.html
-	sudo mkdir /etc/systemd/system/docker.service.d || true
-	sudo sh -c 'echo -e "[Service]\nExecStart=\nExecStart=/usr/bin/docker daemon -H fd:// --iptables=false --dns 8.8.8.8 --dns 8.8.4.4\n" > /etc/systemd/system/docker.service.d/noiptables.conf'
-	sudo systemctl daemon-reload
+	mkdir /etc/systemd/system/docker.service.d || true
+	echo -e "[Service]\nExecStart=\nExecStart=/usr/bin/docker daemon -H fd:// --iptables=false --dns 8.8.8.8 --dns 8.8.4.4\n" > /etc/systemd/system/docker.service.d/noiptables.conf
+	systemctl daemon-reload
 
 	# configure firewall
 	# https://svenv.nl/unixandlinux/dockerufw
-	#sudo sh -c 'echo -e "*nat\n:POSTROUTING ACCEPT [0:0]\n-A POSTROUTING ! -o docker0 -s 172.17.0.0/16 -j MASQUERADE\nCOMMIT\n$(cat /etc/ufw/before.rules)" > /etc/ufw/before.rules'
-	sudo awk '!NF&&a==""{print "\n*nat\n:POSTROUTING ACCEPT [0:0]\n-A POSTROUTING ! -o docker0 -s 172.17.0.0/16 -j MASQUERADE\nCOMMIT\n";a=1}1' /etc/ufw/before.rules > before.rules
-	sudo mv before.rules /etc/ufw/before.rules
-	sudo sed -i 's|DEFAULT_FORWARD_POLICY=.*|DEFAULT_FORWARD_POLICY="ACCEPT"|' /etc/default/ufw
-	sudo ufw reload
-	sudo ufw allow 2375/tcp
+	awk '!NF&&a==""{print "\n*nat\n:POSTROUTING ACCEPT [0:0]\n-A POSTROUTING ! -o docker0 -s 172.17.0.0/16 -j MASQUERADE\nCOMMIT\n";a=1}1' /etc/ufw/before.rules > /etc/ufw/before.rules.tmp
+	mv /etc/ufw/before.rules.tmp /etc/ufw/before.rules
+	
+	sed -i 's|DEFAULT_FORWARD_POLICY=.*|DEFAULT_FORWARD_POLICY="ACCEPT"|' /etc/default/ufw
+	ufw reload
+	ufw allow 2375/tcp
 
 	# start
-	sudo service docker start
+	service docker start
 
 	# start on boot
-	sudo systemctl enable docker
-	
-	# enable daily image cleanup
-	sudo sh -c 'echo "0 6 * * *       docker images -q -a | xargs --no-run-if-empty docker rmi" > /etc/cron.d/docker'
+	systemctl enable docker
 }
 
-install_all()
+install_common()
 {
 	install_ufw
 	install_ntp
@@ -283,36 +268,22 @@ install_all()
 	install_moreutils
 	install_docker
 	install_lynis
-	# install_nginx
-	# install_hdparm
-	# install_glances
-	# install_unzip
+	install_unzip
 	# install_python
 	# install_pip
-	# install_cifs
-	# install_encfs
-	# install_acdcli
-	# install_unionfs
-	# install_gdrive
-	# install_rclone
 }
 
 usage()
 {
 	echo "usage: $THIS [utilities]"
 	echo "utilities:"
-	compgen -A function install_ | sed -r 's|^install_(.+)$| \1|'
-	# declare -F | grep "install_" | sed -r 's|^.+ install_(.+)$| \1|'
+	compgen -A function | sed -nr 's|^install_(.+)$| \1|p'
 	exit 1
 }
 
 pushd "$SCRATCH" >/dev/null
-for util in $*; do
-	case $util in
-	"all")
-		install_all;;
-	*)
-		eval "install_${util}" || usage;;
-	esac
-done
+
+apt-get update
+eval "install_${1}" || usage
+
 popd >/dev/null
