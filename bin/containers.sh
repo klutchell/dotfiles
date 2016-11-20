@@ -134,7 +134,7 @@ set_htpcmanager()
 {
 	IMAGE="linuxserver/htpcmanager"
 	CONTAINER="htpcmanager"
-	MOUNT_OPT="-v $CONFIG_ROOT/$CONTAINER:/config -v $NZBGET_ROOT:/downloads"
+	MOUNT_OPT="-v $CONFIG_ROOT/$CONTAINER:/config"
 	PORT_OPT="-p 8085:8085"
 	ENV_OPT=
 	OTHER_OPT="--link nzbget:nzbget --link sonarr:sonarr --link couchpotato:couchpotato --link transmission:transmission"
@@ -147,7 +147,7 @@ set_netdata()
 {
 	IMAGE="titpetric/netdata"
 	CONTAINER="netdata"
-	MOUNT_OPT="-v /var/run/docker.sock:/var/run/docker.sock -v /proc:/host/proc:ro -v /sys:/host/sys:ro"
+	MOUNT_OPT="-v /var/run/docker.sock:/var/run/docker.sock -v /proc:/host/proc:ro -v /sys:/host/sys:ro -v $NZBGET_ROOT:/nzbget -v $PLEX_ROOT:/plex"
 	PORT_OPT="-p 19999:19999"
 	ENV_OPT=
 	OTHER_OPT="--cap-add SYS_PTRACE"
