@@ -83,6 +83,7 @@ snapshot_upload()
 	popd >/dev/null
 
 	# upload or update
+	snapshot_list
 	FILE_ID="$(grep "$TARBALL" "$GDRIVE_OUTFILE" | head -n1 | cut -d' ' -f1)" || true
 	if [ -n "$FILE_ID" ]; then
 		/usr/sbin/gdrive -c "$GDRIVE_CONFIG" update "$FILE_ID" "$SCRATCH/$TARBALL"
