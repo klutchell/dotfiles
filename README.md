@@ -7,9 +7,9 @@
 ### How do I get set up? ###
 
 * Clone repo to ~/dotfiles
-* Use add.sh to add existing files/dirs to dotfiles management
-* Use link.sh to create links to managed dotfiles
-* Use remove.sh to remove a file/dir from dotfiles management
+* Use dotfiles.sh add to add existing files/dirs to dotfiles management
+* Use dotfiles.sh install to create links to managed dotfiles
+* Use dotfiles.sh uninstall to remove a file/dir from dotfiles management
 
 ### Contribution guidelines ###
 
