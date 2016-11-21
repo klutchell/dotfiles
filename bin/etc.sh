@@ -120,10 +120,8 @@ usage()
 pushd ~/ >/dev/null
 
 SKIP_FILES='
-README.md
-.git
 *.backup
-dotfiles'
+'
 
 eval "etc_${1}" || usage
 

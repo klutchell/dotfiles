@@ -166,7 +166,8 @@ README.md
 dotfiles
 etc
 config
-downloads'
+downloads
+'
 
 eval "dotfiles_${1}" || usage
 
