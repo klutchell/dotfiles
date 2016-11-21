@@ -64,7 +64,7 @@ confirm_action()
 snapshot_list()
 {
 	# list snapshots
-	/usr/sbin/gdrive -c "$GDRIVE_CONFIG" list --query "'$GDRIVE_PARENT' in parents and trashed = false" --order "createdTime desc" > "$GDRIVE_OUTFILE"
+	/usr/sbin/gdrive -c "$GDRIVE_CONFIG" list --query "name contains '$(hostname)' and '$GDRIVE_PARENT' in parents and trashed = false" --order "createdTime desc" > "$GDRIVE_OUTFILE"
 	SNAPSHOT_COUNT="$(($(cat $GDRIVE_OUTFILE | wc -l)-1))"
 	cat "$GDRIVE_OUTFILE"
 }
