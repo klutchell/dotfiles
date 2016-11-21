@@ -164,7 +164,9 @@ README.md
 .git
 *.backup
 dotfiles
-etc'
+etc
+config
+downloads'
 
 eval "dotfiles_${1}" || usage
 

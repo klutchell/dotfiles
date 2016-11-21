@@ -38,11 +38,11 @@ if [ "$(id -u)" = "0" ]; then
 	exit 1
 fi
 
-CONFIG_ROOT="/opt"
-PLEX_ROOT="/data/plex"
-NZBGET_ROOT="/data/nzbget"
-TRANSMISSION_ROOT="/data/transmission"
-HYDRA_ROOT="/data/hydra"
+CONFIG_ROOT="/config"
+PLEX_ROOT="/downloads/plex"
+NZBGET_ROOT="/downloads/nzbget"
+TRANSMISSION_ROOT="/downloads/transmission"
+HYDRA_ROOT="/downloads/hydra"
 
 reset_vars()
 {

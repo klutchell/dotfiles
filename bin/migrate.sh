@@ -56,7 +56,8 @@ migrate_all()
 
 migrate_test()
 {
-	rsync -arzPvhe ssh --bwlimit=$BWLIMIT --no-implied-dirs --relative --dry-run --files-from="$FILES_FROM" / $DESTINATION:/
+	# rsync -arzPvhe ssh --bwlimit=$BWLIMIT --no-implied-dirs --relative --dry-run --files-from="$FILES_FROM" / $DESTINATION:/
+	rsync -arzPvhe ssh --bwlimit=$BWLIMIT --no-implied-dirs --relative --dry-run $MIGRATE_PATHS $DESTINATION:/
 }
 
 usage()
