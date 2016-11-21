@@ -4,8 +4,8 @@ findtime = 600
 maxretry = 3
 banaction = ufw
 
-nginx_error_log = /opt/nginx/log/nginx/*error.log
-nginx_access_log = /opt/nginx/log/nginx/*access.log
+nginx_error_log = /config/nginx/log/nginx/*error.log
+nginx_access_log = /config/nginx/log/nginx/*access.log
 
 [sshd]
 enabled = true

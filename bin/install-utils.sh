@@ -41,7 +41,9 @@ fi
 install_lynis()
 {
 	# https://cisofy.com/documentation/lynis/get-started/#installation-package
-	apt-get install "lynis" -y
+	#apt-get install "lynis" -y
+	
+	git clone https://github.com/CISOfy/lynis /opt/lynis
 }
 
 install_hdparm()
