@@ -203,30 +203,12 @@ install_rsnapshot()
 
 install_docker()
 {
-	# check if already installed
-	if [ "$(dpkg-query -W -f='${Status}' docker-engine 2>/dev/null | grep -c "ok installed")" -eq 1 ]; then
-		echo "package docker-engine is already installed" && return
-	fi
-
-	# https://docs.docker.com/engine/installation/linux/ubuntulinux/
-
-	# prerequisites
-	apt-get update
-	apt-get install apt-transport-https ca-certificates -y
-	apt-get install linux-image-extra-$(uname -r) linux-image-extra-virtual -y
-
-	# add key
-	apt-get install gnupg -y
-	apt-key adv --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys 58118E89F3A912897C070ADBF76221572C52609D
-	echo "deb https://apt.dockerproject.org/repo ubuntu-xenial main" | tee /etc/apt/sources.list.d/docker.list
-
 	# install
-	apt-get update
-	apt-get install docker-engine -y
+	# https://docs.docker.com/engine/installation/linux/ubuntulinux/
+	curl -sSL get.docker.com | sh
 
 	# configure user
-	groupadd docker || true
-	usermod -aG docker "kyle" || true
+	usermod -aG docker "kyle"
 
 	# disable iptable modifications
 	# https://fralef.me/docker-and-iptables.html
@@ -242,7 +224,6 @@ install_docker()
 		awk '!NF&&a==""{print "\n*nat\n:POSTROUTING ACCEPT [0:0]\n-A POSTROUTING ! -o docker0 -s 172.17.0.0/16 -j MASQUERADE\nCOMMIT\n";a=1}1' /etc/ufw/before.rules > /etc/ufw/before.rules.tmp
 		mv /etc/ufw/before.rules.tmp /etc/ufw/before.rules
 	fi
-	
 	sed -i 's|DEFAULT_FORWARD_POLICY=.*|DEFAULT_FORWARD_POLICY="ACCEPT"|' /etc/default/ufw
 	ufw reload
 	ufw allow 2375/tcp
