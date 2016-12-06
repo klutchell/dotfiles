@@ -130,16 +130,16 @@ set_transmission()
 	UFW="51413"
 }
 
-set_htpcmanager()
-{
-	IMAGE="linuxserver/htpcmanager"
-	CONTAINER="htpcmanager"
-	MOUNT_OPT="-v $CONFIG_ROOT/$CONTAINER:/config"
-	PORT_OPT="-p 8085:8085"
-	ENV_OPT=
-	OTHER_OPT="--link nzbget:nzbget --link sonarr:sonarr --link couchpotato:couchpotato --link transmission:transmission"
-	UFW=
-}
+# set_htpcmanager()
+# {
+	# IMAGE="linuxserver/htpcmanager"
+	# CONTAINER="htpcmanager"
+	# MOUNT_OPT="-v $CONFIG_ROOT/$CONTAINER:/config"
+	# PORT_OPT="-p 8085:8085"
+	# ENV_OPT=
+	# OTHER_OPT="--link nzbget:nzbget --link sonarr:sonarr --link couchpotato:couchpotato --link transmission:transmission"
+	# UFW=
+# }
 
 # https://github.com/firehol/netdata
 # https://hub.docker.com/r/titpetric/netdata/
@@ -205,8 +205,7 @@ set_nginx()
 --link couchpotato:couchpotato \
 --link plexpy:plexpy \
 --link transmission:transmission \
---link dockerui:dockerui \
---link htpcmanager:htpcmanager"
+--link dockerui:dockerui"
 	UFW="80/tcp 443/tcp"
 }
 
@@ -369,7 +368,7 @@ usage()
 
 case $2 in
 	"all")
-		containers="nzbget hydra sonarr couchpotato plex plexpy transmission htpcmanager dockerui netdata nginx";;
+		containers="nzbget hydra sonarr couchpotato plex plexpy transmission dockerui netdata nginx";;
 	"")
 		usage;;
 	*)
