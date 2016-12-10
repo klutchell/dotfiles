@@ -400,12 +400,14 @@ esac
 # move to scratch
 pushd "$SCRATCH" >/dev/null
 
-for cont in $containers; do
-	set_common
-	reset_vars
-	eval "set_${cont}" || usage
-	eval "docker_${1}" || usage
-done
+if [ "${1}" != "list" ]; then
+	for cont in $containers; do
+		set_common
+		reset_vars
+		eval "set_${cont}" || usage
+		eval "docker_${1}" || usage
+	done
+fi
 
 docker_list
 
