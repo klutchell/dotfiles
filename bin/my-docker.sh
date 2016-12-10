@@ -282,11 +282,6 @@ close_ports()
 	done
 }
 
-escape_spaces()
-{
-	echo "$1" | sed 's|_|\\ |g'
-}
-
 docker_connect()
 {
 	local cmd="docker exec -it $CONTAINER /bin/bash"
@@ -307,52 +302,79 @@ docker_create()
 	docker_start
 }
 
-docker_update()
+docker_pull()
 {
-	echo "docker pull $IMAGE"
-	docker pull "$IMAGE"
+	local cmd="docker pull $IMAGE"
+	echo $cmd
+	eval $cmd
 	
 	docker_create
 }
 
 docker_start()
 {
-	echo "docker start $CONTAINER"
-	docker start $CONTAINER
+	local cmd="docker start $CONTAINER"
+	echo $cmd
+	eval $cmd || exit 1
 }
 
 docker_stop()
 {
-	echo "docker stop $CONTAINER"
-	docker stop $CONTAINER
+	local cmd="docker stop $CONTAINER"
+	echo $cmd
+	eval $cmd
 }
 
 docker_restart()
 {
-	echo "docker restart $CONTAINER"
-	docker restart $CONTAINER
+	local cmd="docker restart $CONTAINER"
+	echo $cmd
+	eval $cmd || exit 1
 }
 
-docker_delete()
+docker_rm()
 {
 	docker_stop || true
 	
-	echo "docker rm $CONTAINER"
-	docker rm $CONTAINER
+	local cmd="docker rm $CONTAINER"
+	echo $cmd
+	eval $cmd || exit 1
 	
 	close_ports
 }
 
 docker_pause()
 {
-	echo "docker pause $CONTAINER"
-	docker pause $CONTAINER
+	local cmd="docker pause $CONTAINER"
+	echo $cmd
+	eval $cmd || exit 1
 }
 
 docker_unpause()
 {
-	echo "docker unpause $CONTAINER"
-	docker unpause $CONTAINER
+	local cmd="docker unpause $CONTAINER"
+	echo $cmd
+	eval $cmd || exit 1
+}
+
+docker_list()
+{
+	# list containers
+	local cmd="docker ps -a"
+	echo $cmd
+	eval $cmd
+	
+	# list images
+	local cmd="docker images"
+	echo $cmd
+	eval $cmd
+}
+
+docker_clean()
+{
+	local cmd="docker images -q -a | xargs --no-run-if-empty docker rmi"
+	echo $cmd
+	eval $cmd || true
 }
 
 usage()
@@ -385,7 +407,6 @@ for cont in $containers; do
 	eval "docker_${1}" || usage
 done
 
-# list containers
-docker ps -a
+docker_list
 
 popd >/dev/null

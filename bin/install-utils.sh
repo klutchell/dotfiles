@@ -38,6 +38,17 @@ if [ "$(id -u)" != "0" ]; then
 	exit 1
 fi
 
+install_etckeeper()
+{
+	apt-get install "etckeeper" -y
+}
+
+install_cipherscan()
+{
+	# https://github.com/mozilla/cipherscan
+	git clone https://github.com/mozilla/cipherscan.git /opt/cipherscan
+}
+
 install_lynis()
 {
 	# https://cisofy.com/documentation/lynis/get-started/#installation-package
