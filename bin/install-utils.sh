@@ -106,11 +106,17 @@ install_unionfs()
 
 install_acdcli()
 {
-	# requires pip
-	install_pip
+	# requires pip3
+	install_pip3
 
 	# install
 	pip3 install --upgrade git+https://github.com/yadayada/acd_cli.git
+}
+
+install_zip()
+{
+	# install
+	apt-get install "zip" -y
 }
 
 install_unzip()
@@ -125,10 +131,10 @@ install_pip()
 	apt-get install "python-pip" -y
 }
 
-install_python()
+install_pip3()
 {
 	# install
-	apt-get install "python" -y
+	apt-get install "python3-pip" -y
 }
 
 install_cifs()
@@ -257,10 +263,6 @@ install_common()
 	install_nano
 	install_moreutils
 	install_docker
-	install_lynis
-	install_unzip
-	# install_python
-	# install_pip
 }
 
 usage()
