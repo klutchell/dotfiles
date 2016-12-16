@@ -39,7 +39,7 @@ if [ "$(id -u)" = "0" ]; then
 fi
 
 CONFIG_ROOT="/config"
-PLEX_ROOT="/downloads/plex"
+PLEX_ROOT="/plex"
 NZBGET_ROOT="/downloads/nzbget"
 TRANSMISSION_ROOT="/downloads/transmission"
 HYDRA_ROOT="/downloads/hydra"
@@ -291,7 +291,7 @@ docker_connect()
 
 docker_create()
 {
-	docker_delete || true
+	docker_rm || true
 	
 	local cmd="docker create --name $CONTAINER $COMMON_OPT $MOUNT_OPT $PORT_OPT $ENV_OPT $OTHER_OPT $IMAGE"
 	echo $cmd
