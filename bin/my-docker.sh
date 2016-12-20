@@ -80,9 +80,9 @@ set_nzbget()
 	IMAGE="linuxserver/nzbget"
 	CONTAINER="nzbget"
 	MOUNT_OPT="-v $CONFIG_ROOT/$CONTAINER:/config -v $NZBGET_ROOT:/downloads"
-	PORT_OPT="-p 6789:6789"
+	# PORT_OPT="-p 6789:6789"
 	ENV_OPT=
-	OTHER_OPT=
+	OTHER_OPT="--net mybridge"
 	UFW=
 }
 
@@ -91,9 +91,9 @@ set_sonarr()
 	IMAGE="linuxserver/sonarr"
 	CONTAINER="sonarr"
 	MOUNT_OPT="-v $CONFIG_ROOT/$CONTAINER:/config -v $NZBGET_ROOT:/downloads -v $PLEX_ROOT/tv:/tv"
-	PORT_OPT="-p 8989:8989"
+	# PORT_OPT="-p 8989:8989"
 	ENV_OPT=
-	OTHER_OPT="--link nzbget:nzbget --link hydra:hydra"
+	OTHER_OPT="--net mybridge"
 	UFW=
 }
 
@@ -102,9 +102,9 @@ set_couchpotato()
 	IMAGE="linuxserver/couchpotato"
 	CONTAINER="couchpotato"
 	MOUNT_OPT="-v $CONFIG_ROOT/$CONTAINER:/config -v $NZBGET_ROOT:/downloads -v $PLEX_ROOT/movies:/movies"
-	PORT_OPT="-p 5050:5050"
+	# PORT_OPT="-p 5050:5050"
 	ENV_OPT=
-	OTHER_OPT="--link nzbget:nzbget --link hydra:hydra"
+	OTHER_OPT="--net mybridge"
 	UFW=
 }
 
@@ -113,9 +113,9 @@ set_plexpy()
 	IMAGE="linuxserver/plexpy"
 	CONTAINER="plexpy"
 	MOUNT_OPT="-v $CONFIG_ROOT/$CONTAINER:/config -v $CONFIG_ROOT/plex/logs:/logs:ro"
-	PORT_OPT="-p 8181:8181"
+	# PORT_OPT="-p 8181:8181"
 	ENV_OPT=
-	OTHER_OPT=
+	OTHER_OPT="--net mybridge"
 	UFW=
 }
 
@@ -124,10 +124,58 @@ set_transmission()
 	IMAGE="linuxserver/transmission"
 	CONTAINER="transmission"
 	MOUNT_OPT="-v $CONFIG_ROOT/$CONTAINER:/config -v $TRANSMISSION_ROOT:/downloads -v $TRANSMISSION_ROOT/watch:/watch"
-	PORT_OPT="-p 9091:9091 -p 51413:51413 -p 51413:51413/udp"
+	# PORT_OPT="-p 9091:9091 -p 51413:51413 -p 51413:51413/udp"
+	PORT_OPT="-p 51413:51413 -p 51413:51413/udp"
 	ENV_OPT=
-	OTHER_OPT=
-	UFW="51413"
+	OTHER_OPT="--net mybridge"
+	UFW=
+}
+
+# https://github.com/firehol/netdata
+# https://hub.docker.com/r/titpetric/netdata/
+set_netdata()
+{
+	IMAGE="titpetric/netdata"
+	CONTAINER="netdata"
+	MOUNT_OPT="-v /var/run/docker.sock:/var/run/docker.sock -v /proc:/host/proc:ro -v /sys:/host/sys:ro -v $NZBGET_ROOT:/nzbget -v $PLEX_ROOT:/plex"
+	# PORT_OPT="-p 19999:19999"
+	ENV_OPT=
+	OTHER_OPT="--cap-add SYS_PTRACE --net mybridge"
+	UFW=
+}
+
+# https://github.com/kevana/ui-for-docker
+set_dockerui()
+{
+	IMAGE="uifd/ui-for-docker"
+	CONTAINER="dockerui"
+	MOUNT_OPT="-v /var/run/docker.sock:/var/run/docker.sock"
+	# PORT_OPT="-p 9000:9000"
+	ENV_OPT=
+	OTHER_OPT="--privileged --net mybridge"
+	UFW=
+}
+
+set_hydra()
+{
+	IMAGE="linuxserver/hydra"
+	CONTAINER="hydra"
+	MOUNT_OPT="-v $CONFIG_ROOT/hydra:/config -v $HYDRA_ROOT:/downloads"
+	# PORT_OPT="-p 5075:5075"
+	ENV_OPT=
+	OTHER_OPT="--net mybridge"
+	UFW=
+}
+
+set_nginx()
+{
+	IMAGE="linuxserver/nginx"
+	CONTAINER="nginx"
+	MOUNT_OPT="-v $CONFIG_ROOT/$CONTAINER:/config"
+	PORT_OPT="-p 80:80 -p 443:443"
+	ENV_OPT=
+	OTHER_OPT="--net mybridge"
+	UFW=
 }
 
 # set_htpcmanager()
@@ -141,74 +189,6 @@ set_transmission()
 	# UFW=
 # }
 
-# https://github.com/firehol/netdata
-# https://hub.docker.com/r/titpetric/netdata/
-set_netdata()
-{
-	IMAGE="titpetric/netdata"
-	CONTAINER="netdata"
-	MOUNT_OPT="-v /var/run/docker.sock:/var/run/docker.sock -v /proc:/host/proc:ro -v /sys:/host/sys:ro -v $NZBGET_ROOT:/nzbget -v $PLEX_ROOT:/plex"
-	PORT_OPT="-p 19999:19999"
-	ENV_OPT=
-	OTHER_OPT="--cap-add SYS_PTRACE"
-	UFW=
-}
-
-# https://github.com/kevana/ui-for-docker
-set_dockerui()
-{
-	IMAGE="uifd/ui-for-docker"
-	CONTAINER="dockerui"
-	MOUNT_OPT="-v /var/run/docker.sock:/var/run/docker.sock"
-	PORT_OPT="-p 9000:9000"
-	ENV_OPT=
-	OTHER_OPT="--privileged"
-	UFW=
-}
-
-set_hydra()
-{
-	IMAGE="linuxserver/hydra"
-	CONTAINER="hydra"
-	MOUNT_OPT="-v $CONFIG_ROOT/hydra:/config -v $HYDRA_ROOT:/downloads"
-	PORT_OPT="-p 5075:5075"
-	ENV_OPT=
-	OTHER_OPT="--link nzbget:nzbget"
-	UFW=
-}
-
-# https://github.com/razorgirl/nzedb-docker
-# https://hub.docker.com/r/bsmith1988/nzedb-docker/
-# set_nzedb()
-# {
-	# # IMAGE="nzedb/master"
-	# IMAGE="bsmith1988/nzedb-docker"
-	# CONTAINER="nzedb"
-	# MOUNT_OPT="-v $CONFIG_ROOT/nzedb:/var/www/nZEDb"
-	# PORT_OPT="-p 8800:8800"
-	# ENV_OPT=
-	# OTHER_OPT=
-	# UFW="8800"
-# }
-
-set_nginx()
-{
-	IMAGE="linuxserver/nginx"
-	CONTAINER="nginx"
-	MOUNT_OPT="-v $CONFIG_ROOT/$CONTAINER:/config"
-	PORT_OPT="-p 80:80 -p 443:443"
-	ENV_OPT=
-	OTHER_OPT="--link hydra:hydra \
---link netdata:netdata \
---link nzbget:nzbget \
---link sonarr:sonarr \
---link couchpotato:couchpotato \
---link plexpy:plexpy \
---link transmission:transmission \
---link dockerui:dockerui"
-	UFW="80/tcp 443/tcp"
-}
-
 # set_glances()
 # {
 	# IMAGE="docker.io/nicolargo/glances"
@@ -217,17 +197,6 @@ set_nginx()
 	# PORT_OPT="-p 61208-61209:61208-61209"
 	# ENV_OPT="-e GLANCES_OPT=-w"
 	# OTHER_OPT=
-	# UFW=
-# }
-
-# set_monitorix()
-# {
-	# IMAGE="geiseri/monitorix"
-	# CONTAINER="monitorix"
-	# MOUNT_OPT=
-	# PORT_OPT="-p 8080:8080"
-	# ENV_OPT=
-	# OTHER_OPT="--privileged"
 	# UFW=
 # }
 
@@ -242,43 +211,26 @@ set_nginx()
 	# UFW=
 # }
 
-# set_munin-server()
-# {
-	# IMAGE="munin-server"
-	# CONTAINER="munin-server"
-	# MOUNT_OPT=
-	# PORT_OPT="-p 8080:8080"
-	# ENV_OPT="NODES=$(hostname):munin-node -e MUNIN_USER=username -e MUNIN_PASSWORD=password"
-	# OTHER_OPT="--link munin-node:munin-node"
-	# UFW="8080/tcp"
-# }
-
-# set_munin-node()
-# {
-	# IMAGE="maxwayt/munin-node"
-	# CONTAINER="munin-node"
-	# MOUNT_OPT="-v $CONFIG_ROOT/$CONTAINER:/etc/munin"
-	# PORT_OPT="-p 4949:4949 -p 4949:4949/udp"
-	# ENV_OPT=
-	# OTHER_OPT="--privileged"
-	# UFW=
-# }
-
 open_ports()
 {
 	for port in $UFW
 	do
-		echo "ufw allow $port"
-		sudo ufw allow $port
+		local cmd="sudo ufw allow $port comment \"$CONTAINER (docker)\""
+		echo $cmd
+		eval $cmd
 	done
 }
 
 close_ports()
 {
-	for port in $UFW
+	COUNTER=0
+	while [ "$(sudo ufw status | grep "$CONTAINER")" != "" ] && [ $COUNTER -lt 10 ]
 	do
-		echo "ufw --force delete allow $port"
-		sudo ufw --force delete allow $port
+		local rule="$(sudo ufw status numbered | grep "$CONTAINER" | sed -rn 's/\[( )?([0-9]{1,2})\].+/\2/p' | head -n1)"
+		local cmd="sudo ufw --force delete $rule"
+		echo $cmd
+		eval $cmd
+		let COUNTER=COUNTER+1
 	done
 }
 
@@ -292,6 +244,7 @@ docker_connect()
 docker_create()
 {
 	docker_rm || true
+	docker network create -d bridge mybridge || true
 	
 	local cmd="docker create --name $CONTAINER $COMMON_OPT $MOUNT_OPT $PORT_OPT $ENV_OPT $OTHER_OPT $IMAGE"
 	echo $cmd
@@ -368,6 +321,11 @@ docker_list()
 	local cmd="docker images"
 	echo $cmd
 	eval $cmd
+	
+	# list networks
+	local cmd="docker network ls"
+	echo $cmd
+	eval $cmd
 }
 
 docker_clean()
@@ -388,6 +346,24 @@ usage()
 	exit 1
 }
 
+# move to scratch
+pushd "$SCRATCH" >/dev/null
+
+if [ "${1}" = "list" ]
+then
+	docker_list
+	popd >/dev/null
+	exit 0
+fi
+
+if [ "${1}" = "clean" ]
+then
+	docker_clean
+	docker_list
+	popd >/dev/null
+	exit 0
+fi
+
 case $2 in
 	"all")
 		containers="nzbget hydra sonarr couchpotato plex plexpy transmission dockerui netdata nginx";;
@@ -397,18 +373,12 @@ case $2 in
 		containers=$2;;
 esac
 
-# move to scratch
-pushd "$SCRATCH" >/dev/null
-
-if [ "${1}" != "list" ]; then
-	for cont in $containers; do
-		set_common
-		reset_vars
-		eval "set_${cont}" || usage
-		eval "docker_${1}" || usage
-	done
-fi
+for cont in $containers; do
+	set_common
+	reset_vars
+	eval "set_${cont}" || usage
+	eval "docker_${1}" || usage
+done
 
 docker_list
-
 popd >/dev/null

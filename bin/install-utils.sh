@@ -223,33 +223,32 @@ install_docker()
 	# install
 	# https://docs.docker.com/engine/installation/linux/ubuntulinux/
 	curl -sSL get.docker.com | sh
-
-	# configure user
-	usermod -aG docker "kyle"
-
+	
 	# disable iptable modifications
 	# https://fralef.me/docker-and-iptables.html
-	if [ ! -f "/etc/systemd/system/docker.service.d/noiptables.conf" ]; then
-		mkdir /etc/systemd/system/docker.service.d 2>/dev/null || true
-		echo -e "[Service]\nExecStart=\nExecStart=/usr/bin/docker daemon -H fd:// --iptables=false --dns 8.8.8.8 --dns 8.8.4.4\n" > /etc/systemd/system/docker.service.d/noiptables.conf
-		systemctl daemon-reload
-	fi
-
-	# configure firewall
+	# if [ ! -f "/etc/systemd/system/docker.service.d/noiptables.conf" ]; then
+		# mkdir /etc/systemd/system/docker.service.d 2>/dev/null || true
+		# echo -e "[Service]\nExecStart=\nExecStart=/usr/bin/docker daemon -H fd:// --iptables=false --dns 8.8.8.8 --dns 8.8.4.4\n" > /etc/systemd/system/docker.service.d/noiptables.conf
+		# systemctl daemon-reload
+	# fi
+	
+	# allow container networks (required if iptables=false above)
 	# https://svenv.nl/unixandlinux/dockerufw
-	if ! grep -q "docker0" /etc/ufw/before.rules; then
-		awk '!NF&&a==""{print "\n*nat\n:POSTROUTING ACCEPT [0:0]\n-A POSTROUTING ! -o docker0 -s 172.17.0.0/16 -j MASQUERADE\nCOMMIT\n";a=1}1' /etc/ufw/before.rules > /etc/ufw/before.rules.tmp
-		mv /etc/ufw/before.rules.tmp /etc/ufw/before.rules
-	fi
-	sed -i 's|DEFAULT_FORWARD_POLICY=.*|DEFAULT_FORWARD_POLICY="ACCEPT"|' /etc/default/ufw
-	ufw reload
-	ufw allow 2375/tcp
-
-	# start
-	service docker start
-
+	# if ! grep -q "docker0" /etc/ufw/before.rules; then
+		# awk '!NF&&a==""{print "\n*nat\n:POSTROUTING ACCEPT [0:0]\n-A POSTROUTING ! -o docker0 -s 172.17.0.0/16 -j MASQUERADE\nCOMMIT\n";a=1}1' /etc/ufw/before.rules > /etc/ufw/before.rules.tmp
+		# mv /etc/ufw/before.rules.tmp /etc/ufw/before.rules
+	# fi
+	
+	# configure firewall (required if iptables=false above)
+	#sed -i 's|DEFAULT_FORWARD_POLICY=.*|DEFAULT_FORWARD_POLICY="ACCEPT"|' /etc/default/ufw
+	#ufw reload
+	#ufw allow 2375/tcp
+	
 	# start on boot
 	systemctl enable docker
+	
+	# start
+	service docker start
 }
 
 install_common()
