@@ -175,7 +175,7 @@ set_nginx()
 	PORT_OPT="-p 80:80 -p 443:443"
 	ENV_OPT=
 	OTHER_OPT="--net mybridge"
-	UFW=
+	UFW="80 443"
 }
 
 # set_htpcmanager()
@@ -359,7 +359,6 @@ fi
 if [ "${1}" = "clean" ]
 then
 	docker_clean
-	docker_list
 	popd >/dev/null
 	exit 0
 fi
@@ -380,5 +379,4 @@ for cont in $containers; do
 	eval "docker_${1}" || usage
 done
 
-docker_list
 popd >/dev/null
