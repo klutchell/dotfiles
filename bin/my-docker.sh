@@ -64,15 +64,35 @@ set_common()
 	COMMON_OPT="$MOUNT_OPT $PORT_OPT $ENV_OPT $OTHER_OPT"
 }
 
+# set_plex()
+# {
+	# IMAGE="linuxserver/plex"
+	# CONTAINER="plex"
+	# MOUNT_OPT="-v $CONFIG_ROOT/$CONTAINER:/config -v $PLEX_ROOT/tv:/data/tv -v $PLEX_ROOT/movies:/data/movies -v /tmp:/transcode"
+	# PORT_OPT=
+	# ENV_OPT="-e VERSION=latest"
+	# OTHER_OPT="--net=host"
+	# UFW="32400"
+# }
+
+# https://github.com/plexinc/pms-docker/blob/master/README.md
 set_plex()
 {
-	IMAGE="linuxserver/plex"
+	IMAGE="plexinc/pms-docker"
 	CONTAINER="plex"
-	MOUNT_OPT="-v $CONFIG_ROOT/$CONTAINER:/config -v $PLEX_ROOT/tv:/data/tv -v $PLEX_ROOT/movies:/data/movies -v /tmp:/transcode"
-	PORT_OPT=
-	ENV_OPT="-e VERSION=latest"
-	OTHER_OPT="--net=host"
-	UFW="32400"
+	MOUNT_OPT="-v $CONFIG_ROOT/$CONTAINER:/config -v $PLEX_ROOT/tv:/data/tvshows -v $PLEX_ROOT/movies:/data/movies -v /tmp:/transcode"
+	PORT_OPT="-p 32400:32400/tcp \
+-p 3005:3005/tcp \
+-p 8324:8324/tcp \
+-p 32469:32469/tcp \
+-p 1900:1900/udp \
+-p 32410:32410/udp \
+-p 32412:32412/udp \
+-p 32413:32413/udp \
+-p 32414:32414/udp"
+	ENV_OPT=
+	OTHER_OPT="--net mybridge"
+	UFW=
 }
 
 set_nzbget()
@@ -152,7 +172,7 @@ set_dockerui()
 	MOUNT_OPT="-v /var/run/docker.sock:/var/run/docker.sock"
 	# PORT_OPT="-p 9000:9000"
 	ENV_OPT=
-	OTHER_OPT="--privileged --net mybridge"
+	OTHER_OPT="--net mybridge"
 	UFW=
 }
 
@@ -175,7 +195,7 @@ set_nginx()
 	PORT_OPT="-p 80:80 -p 443:443"
 	ENV_OPT=
 	OTHER_OPT="--net mybridge"
-	UFW="80 443"
+	UFW="80/tcp 443/tcp"
 }
 
 # set_htpcmanager()
@@ -291,7 +311,7 @@ docker_rm()
 	
 	local cmd="docker rm $CONTAINER"
 	echo $cmd
-	eval $cmd || exit 1
+	eval $cmd || true
 	
 	close_ports
 }
