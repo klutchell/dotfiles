@@ -80,7 +80,7 @@ set_plex()
 {
 	IMAGE="plexinc/pms-docker"
 	CONTAINER="plex"
-	MOUNT_OPT="-v $CONFIG_ROOT/$CONTAINER:/config -v $PLEX_ROOT/tv:/data/tvshows -v $PLEX_ROOT/movies:/data/movies -v /tmp:/transcode"
+	MOUNT_OPT="-v $CONFIG_ROOT/$CONTAINER:/config -v $PLEX_ROOT/tv:/data/tv -v $PLEX_ROOT/movies:/data/movies -v /tmp:/transcode"
 	PORT_OPT="-p 32400:32400/tcp \
 -p 3005:3005/tcp \
 -p 8324:8324/tcp \
