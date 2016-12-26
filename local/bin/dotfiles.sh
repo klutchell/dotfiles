@@ -46,16 +46,17 @@ confirm_action()
 
 dotfiles_status()
 {
-	# iterate over files/folders in home (not links)
-	for file in $(find ~ -maxdepth 1 -mindepth 1 ! -type l $(printf "! -name %s " $SKIP_FILES) -exec basename {} \;)
+	# iterate over hidden files/folders in ~
+	for file in $(find ~ -maxdepth 1 -mindepth 1 ! -type l $(printf "! -name %s " $SKIP_FILES) -name '.*' -exec basename {} \;)
 	do
 		echo "Unmanaged: $file"
 	done
 	
-	# iterate over files/folders in home/dotfiles (not links)
-	for file in $(find ~/dotfiles -maxdepth 1 -mindepth 1 ! -type l $(printf "! -name %s " $SKIP_FILES) -exec basename {} \;)
+	# iterate over files/folders in ~/$DOTFILES (not links, not hidden)
+	for file in $(find ~/$DOTFILES -maxdepth 1 -mindepth 1 ! -type l $(printf "! -name %s " $SKIP_FILES) ! -name '.*' -exec basename {} \;)
 	do
-		dot_file="dotfiles/$file"
+		dot_file="$DOTFILES/$file"
+		file=".$file"
 		if [ -L "$file" ] && [ "$(readlink "$file")" = "$dot_file" ]; then
 			echo "Installed: $file -> $dot_file"
 		else
@@ -66,10 +67,10 @@ dotfiles_status()
 
 dotfiles_add()
 {
-	# iterate over files/folders in home (not links)
-	for file in $(find ~ -maxdepth 1 -mindepth 1 ! -type l $(printf "! -name %s " $SKIP_FILES) -exec basename {} \;)
+	# iterate over hidden files/folders in ~
+	for file in $(find ~ -maxdepth 1 -mindepth 1 ! -type l $(printf "! -name %s " $SKIP_FILES) -name '.*' -exec basename {} \;)
 	do
-		dot_file="dotfiles/$file"
+		dot_file="$DOTFILES/$file"
 		
 		echo "add $file to dotfiles?"
 		confirm_action || continue
@@ -93,10 +94,11 @@ dotfiles_add()
 
 dotfiles_install()
 {
-	# iterate over files/folders in home/dotfiles (not links)
-	for file in $(find ~/dotfiles -maxdepth 1 -mindepth 1 ! -type l $(printf "! -name %s " $SKIP_FILES) -exec basename {} \;)
+	# iterate over files/folders in ~/$DOTFILES (not links, not hidden)
+	for file in $(find ~/$DOTFILES -maxdepth 1 -mindepth 1 ! -type l $(printf "! -name %s " $SKIP_FILES) ! -name '.*' -exec basename {} \;)
 	do
-		dot_file="dotfiles/$file"
+		dot_file="$DOTFILES/$file"
+		file=".$file"
 		
 		if [ -L "$file" ] && [ "$(readlink "$file")" = "$dot_file" ]; then
 			continue
@@ -121,10 +123,11 @@ dotfiles_install()
 
 dotfiles_uninstall()
 {
-	# iterate over files/folders in home/dotfiles (not links)
-	for file in $(find ~/dotfiles -maxdepth 1 -mindepth 1 ! -type l $(printf "! -name %s " $SKIP_FILES) -exec basename {} \;)
+	# iterate over files/folders in ~/$DOTFILES (not links, not hidden)
+	for file in $(find ~/$DOTFILES -maxdepth 1 -mindepth 1 ! -type l $(printf "! -name %s " $SKIP_FILES) ! -name '.*' -exec basename {} \;)
 	do
-		dot_file="dotfiles/$file"
+		dot_file="$DOTFILES/$file"
+		file=".$file"
 		
 		echo "remove $file from dotfiles?"
 		confirm_action || continue
@@ -159,14 +162,11 @@ usage()
 # move to home
 pushd ~/ >/dev/null
 
+DOTFILES='.dotfiles'
 SKIP_FILES='
-README.md
-.git
 *.backup
-dotfiles
-etc
-config
-downloads
+.dotfiles
+README.md
 '
 
 eval "dotfiles_${1}" || usage
