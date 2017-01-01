@@ -8,7 +8,8 @@
 
 ```bash
 git clone git@github.com:klutchell/dotfiles.git ~/.dotfiles
-dotfiles.sh install
+cd ~/.dotfiles
+make install
 ```
 
 ### Contribution guidelines ###
