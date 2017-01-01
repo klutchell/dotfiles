@@ -14,8 +14,8 @@ make install
 
 ### Contribution guidelines ###
 
-* N/A
+* n/a
 
 ### Who do I talk to? ###
 
-* Repo owner or admin
+* repo owner or admin
