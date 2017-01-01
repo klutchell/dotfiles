@@ -38,6 +38,17 @@ if [ "$(id -u)" != "0" ]; then
 	exit 1
 fi
 
+install_stow()
+{
+	# http://www.gnu.org/software/stow/
+	apt-get install "stow" -y
+}
+
+install_make()
+{
+	apt-get install "make" -y
+}
+
 install_etckeeper()
 {
 	apt-get install "etckeeper" -y
@@ -195,6 +206,8 @@ install_common()
 	install_moreutils
 	install_docker
 	install_dockercompose
+	install_stow
+	install_make
 }
 
 usage()
