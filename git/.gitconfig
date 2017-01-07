@@ -3,7 +3,7 @@
 	name = Kyle Harding
 
 [core]
-	editor = vim
+	editor = nano
 	ignorecase = false
 
 [push]
