@@ -181,19 +181,6 @@ install_rsnapshot()
 	apt-get install "rsnapshot" -y
 }
 
-install_docker()
-{
-	# https://docs.docker.com/engine/installation/linux/ubuntulinux/
-	curl -sSL get.docker.com | sh
-}
-
-install_dockercompose()
-{
-	# https://github.com/docker/compose/releases
-	curl -L https://github.com/docker/compose/releases/download/1.9.0/docker-compose-`uname -s`-`uname -m` > /usr/local/bin/docker-compose
-	chmod +x /usr/local/bin/docker-compose
-}
-
 install_common()
 {
 	install_ufw
@@ -201,11 +188,8 @@ install_common()
 	install_openssh
 	install_git
 	install_fail2ban
-	install_rsnapshot
 	install_nano
 	install_moreutils
-	install_docker
-	install_dockercompose
 	install_stow
 	install_make
 }
