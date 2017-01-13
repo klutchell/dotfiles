@@ -71,12 +71,6 @@ install_hdparm()
 	apt-get install "hdparm" -y
 }
 
-install_glances()
-{
-	# https://pypi.python.org/pypi/Glances
-	curl -L https://bit.ly/glances | /bin/bash
-}
-
 install_rclone()
 {
 	install_unzip
@@ -99,6 +93,11 @@ install_gdrive()
 install_unionfs()
 {
 	apt-get install "unionfs-fuse" -y
+}
+
+install_encfs()
+{
+	apt-get install "encfs" -y
 }
 
 install_acdcli()
@@ -130,12 +129,6 @@ install_pip3()
 install_cifs()
 {
 	apt-get install "cifs-utils" -y
-}
-
-install_encfs()
-{
-	apt-get install "encfs" -y
-	sed -i 's|#user_allow_other|user_allow_other|' /etc/fuse.conf
 }
 
 install_moreutils()
@@ -173,6 +166,8 @@ install_nano()
 
 install_git()
 {
+	add-apt-repository ppa:git-core/ppa -y
+	apt-get update
 	apt-get install "git" -y
 }
 
