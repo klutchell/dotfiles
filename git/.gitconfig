@@ -29,3 +29,5 @@
 	g = grep --extended-regexp --break --heading --line-number
 [diff]
 	indentHeuristic = true
+[rebase]
+	autostash = true
