@@ -21,9 +21,6 @@ finish()
 }
 trap finish INT TERM EXIT
 
-# redirect output to log
-[ -t 1 ] || exec &> >(ts >>"$LOG")
-
 # exit if pid exists
 [ -f "$PID" ] && { echo "$THIS is already running!"; exit 2; }
 
@@ -66,11 +63,6 @@ install_lynis()
 	git clone https://github.com/CISOfy/lynis /opt/lynis
 }
 
-install_hdparm()
-{
-	apt-get install "hdparm" -y
-}
-
 install_rclone()
 {
 	install_unzip
@@ -98,12 +90,6 @@ install_unionfs()
 install_encfs()
 {
 	apt-get install "encfs" -y
-}
-
-install_acdcli()
-{
-	install_pip3
-	pip3 install --upgrade git+https://github.com/yadayada/acd_cli.git
 }
 
 install_zip()
@@ -182,10 +168,8 @@ install_common()
 	install_ntp
 	install_openssh
 	install_git
-	install_fail2ban
 	install_nano
 	install_moreutils
-	install_stow
 	install_make
 }
 
