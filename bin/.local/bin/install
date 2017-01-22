@@ -35,6 +35,11 @@ if [ "$(id -u)" != "0" ]; then
 	exit 1
 fi
 
+install_softwareproperties()
+{
+	apt-get install "software-properties-common" -y
+}
+
 install_stow()
 {
 	# http://www.gnu.org/software/stow/
@@ -152,6 +157,7 @@ install_nano()
 
 install_git()
 {
+	install_softwareproperties
 	add-apt-repository ppa:git-core/ppa -y
 	apt-get update
 	apt-get install "git" -y
