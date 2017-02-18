@@ -23,10 +23,15 @@ if [ "$(id -u)" != "0" ]; then
 	exit 1
 fi
 
+install_snap()
+{
+	apt-get install "snap" -y
+}
+
 install_whalebrew()
 {
 	# https://github.com/bfirsh/whalebrew
-	latest_url="$(curl -s https://api.github.com/repos/bfirsh/whalebrew/releases | grep browser_download_url | grep "whalebrew-compose-$(uname -s)-$(uname -m)" | head -n 1 | cut -d '"' -f 4)"
+	latest_url="$(curl -s https://api.github.com/repos/bfirsh/whalebrew/releases | grep browser_download_url | grep "whalebrew-$(uname -s)-$(uname -m)" | head -n 1 | cut -d '"' -f 4)"
 	curl -L "$latest_url" > /usr/local/bin/whalebrew
 	chmod +x /usr/local/bin/whalebrew
 }
@@ -55,7 +60,9 @@ install_etckeeper()
 install_cipherscan()
 {
 	# https://github.com/mozilla/cipherscan
-	git clone https://github.com/mozilla/cipherscan.git /opt/cipherscan
+	# git clone https://github.com/mozilla/cipherscan.git /opt/cipherscan
+	install_whalebrew
+	whalebrew install klutchell/cipherscan
 }
 
 install_lynis()
@@ -66,13 +73,16 @@ install_lynis()
 
 install_rclone()
 {
-	install_unzip
-	wget 'http://downloads.rclone.org/rclone-current-linux-amd64.zip'
-	unzip rclone-current-linux-amd64.zip
-	cd rclone-*-linux-amd64
-	cp rclone /usr/sbin/
-	chown root:root /usr/sbin/rclone
-	chmod 755 /usr/sbin/rclone
+	install_snap
+	snap install rclone --classic
+	snap refresh rclone
+	# install_unzip
+	# wget 'http://downloads.rclone.org/rclone-current-linux-amd64.zip'
+	# unzip rclone-current-linux-amd64.zip
+	# cd rclone-*-linux-amd64
+	# cp rclone /usr/sbin/
+	# chown root:root /usr/sbin/rclone
+	# chmod 755 /usr/sbin/rclone
 }
 
 install_gdrive()
@@ -171,7 +181,9 @@ install_common()
 	install_openssh
 	install_git
 	install_nano
-	install_make
+	install_stow
+	install_snap
+	install_whalebrew
 }
 
 usage()
