@@ -35,17 +35,17 @@ sudo -H pip3 install --upgrade git+https://github.com/yadayada/acd_cli.git
 acdcli init
 # <- obtain oauth key
 cp oauth_data /home/ubuntu/.cache/acd_cli/
-mkdir -p ~/acd ~/.config/systemd/user/
-wget https://raw.githubusercontent.com/yadayada/acd_cli/master/assets/amazon-cloud-drive.service -O ~/.config/systemd/user/amazon-cloud-drive.service
-systemctl --user daemon-reload
-systemctl --user start amazon-cloud-drive.service
+mkdir ~/acd
 
 # install encfs
 sudo apt install -y encfs
 mkdir ~/acd/.encfs ~/encfs
 encfs ~/acd/.encfs ~/encfs
 mv ~/acd/.encfs/.encfs6.xml ~/
-nano ~/.config/systemd/user/encfs.service
-# <- create service file
+
+# start services
 systemctl --user daemon-reload
+systemctl --user enable amazon-cloud-drive.service
+systemctl --user start amazon-cloud-drive.service
+systemctl --user enable encfs.service
 systemctl --user start encfs.service
