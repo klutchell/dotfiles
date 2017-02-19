@@ -182,8 +182,6 @@ install_common()
 	install_git
 	install_nano
 	install_stow
-	install_snap
-	install_whalebrew
 }
 
 usage()
@@ -196,7 +194,10 @@ usage()
 
 pushd "$SCRATCH" >/dev/null
 
-apt-get update
-eval "install_${1}" || usage
+[ -n "$1" ] || usage
+for util in $@
+do
+	eval "install_${util}" || usage
+done
 
 popd >/dev/null

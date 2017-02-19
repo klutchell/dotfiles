@@ -38,6 +38,7 @@ cp oauth_data /home/ubuntu/.cache/acd_cli/
 mkdir ~/acd
 
 # install encfs
+sudo sed -i 's|#user_allow_other|user_allow_other|' /etc/fuse.conf
 sudo apt install -y encfs
 mkdir ~/acd/.encfs ~/encfs
 encfs ~/acd/.encfs ~/encfs
