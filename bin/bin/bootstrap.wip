@@ -1,0 +1,51 @@
+#!/bin/bash
+
+sudo apt update
+sudo apt -y upgrade
+
+# install ufw
+sudo apt install -y ufw
+sudo ufw allow 'OpenSSH'
+
+# install ntp
+sudo timedatectl set-timezone 'America/New_York'
+sudo apt install -y ntp
+sudo ufw allow 'ntp'
+
+# generate ssh key
+ssh-keygen
+cat .ssh/id_rsa.pub
+# <- copy public key to github
+
+# install git
+sudo apt install -y software-properties-common
+sudo add-apt-repository -y ppa:git-core/ppa
+sudo apt update
+sudo apt install -y git
+
+# install dotfiles
+sudo apt install -y make stow
+git clone git@github.com:klutchell/dotfiles.git ~/dotfiles
+cd ~/dotfiles
+make install
+
+# install acdcli
+sudo apt install -y python3-pip
+sudo -H pip3 install --upgrade git+https://github.com/yadayada/acd_cli.git
+acdcli init
+# <- obtain oauth key
+cp oauth_data /home/ubuntu/.cache/acd_cli/
+mkdir -p ~/acd ~/.config/systemd/user/
+wget https://raw.githubusercontent.com/yadayada/acd_cli/master/assets/amazon-cloud-drive.service -O ~/.config/systemd/user/amazon-cloud-drive.service
+systemctl --user daemon-reload
+systemctl --user start amazon-cloud-drive.service
+
+# install encfs
+sudo apt install -y encfs
+mkdir ~/acd/.encfs ~/encfs
+encfs ~/acd/.encfs ~/encfs
+mv ~/acd/.encfs/.encfs6.xml ~/
+nano ~/.config/systemd/user/encfs.service
+# <- create service file
+systemctl --user daemon-reload
+systemctl --user start encfs.service
