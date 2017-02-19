@@ -1,0 +1,17 @@
+[Unit]
+Description=user Encfs FUSE mount
+Documentation=https://vgough.github.io/encfs/
+AssertPathIsDirectory=%h/acd/.encfs
+AssertPathIsDirectory=%h/encfs
+After=amazon-cloud-drive.service
+Requires=amazon-cloud-drive.service
+
+[Service]
+Type=simple
+Environment=ENCFS6_CONFIG=%h/.encfs6.xml
+ExecStart=/usr/bin/encfs -f --extpass="cat %h/.extpass" %h/acd/.encfs %h/encfs
+ExecStop=/bin/fusermount -u %h/encfs
+Restart=on-abort
+
+[Install]
+WantedBy=default.target

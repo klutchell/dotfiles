@@ -1,21 +1,18 @@
 # dotfiles #
 
-### Description ###
+## Description
 
-* my dotfile and text editor configurations
+my dotfile and text editor configurations
 
-### Usage ###
+## Usage
 
 ```bash
-git clone git@github.com:klutchell/dotfiles.git ~/.dotfiles
+sudo apt install -y make stash
+git clone git@github.com:klutchell/dotfiles.git ~/dotfiles
 cd ~/.dotfiles
 make install
 ```
 
-### Contributing ###
+## Author
 
-* n/a
-
-### Author ###
-
-* Kyle Harding <kylemharding@gmail.com>
+Kyle Harding <kylemharding@gmail.com>
