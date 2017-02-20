@@ -15,8 +15,8 @@ After=network-online.target
 
 [Service]
 Type=simple
-ExecStart=/usr/local/bin/acd_cli mount --foreground %h/acd
-ExecStop=/usr/local/bin/acd_cli -v -nl umount %h/acd
+ExecStart=/usr/local/bin/acdcli mount --foreground %h/acd
+ExecStop=/usr/local/bin/acdcli -v -nl umount %h/acd
 Restart=on-abort
 
 [Install]
