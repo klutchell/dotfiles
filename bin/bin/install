@@ -30,8 +30,7 @@ install_speedtest()
 
 install_pip()
 {
-	wget https://bootstrap.pypa.io/get-pip.py
-	python get-pip.py
+	curl https://bootstrap.pypa.io/get-pip.py | python2
 }
 
 install_virtualenv()
@@ -39,7 +38,7 @@ install_virtualenv()
 	install_pip
 	pip install --upgrade virtualenv virtualenvwrapper
 	rm -rf ~/.cache/pip
-	export WORKON_HOME=~/.virtualenvs
+	export WORKON_HOME="/home/$(who -m | awk '{print $1;}')/.virtualenvs"
 	mkdir -p "$WORKON_HOME" || true
 	source /usr/local/bin/virtualenvwrapper.sh
 }
@@ -180,7 +179,7 @@ install_ntp()
 	ufw allow 'ntp'
 }
 
-install_openssh()
+install_ssh()
 {
 	apt install -y openssh-server
 	ufw allow 'OpenSSH'
@@ -212,12 +211,13 @@ install_rsnapshot()
 install_common()
 {
 	install_ufw
+	install_ssh
 	install_ntp
-	install_openssh
 	install_git
 	install_nano
 	install_make
 	install_stow
+	install_moreutils
 }
 
 usage()

@@ -1,0 +1,18 @@
+#!/bin/bash
+
+# update installed packages
+sudo apt update
+sudo apt -y upgrade
+sudo apt -y autoremove
+
+# install common utilities
+curl https://raw.githubusercontent.com/klutchell/dotfiles/master/bin/bin/install | sudo bash -s ufw ssh ntp git nano make stow moreutils
+
+# generate ssh key
+ssh-keygen
+cat .ssh/id_rsa.pub
+
+# install dotfiles
+git clone git@github.com:klutchell/dotfiles.git ~/dotfiles
+cd ~/dotfiles
+make install
