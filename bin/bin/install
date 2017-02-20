@@ -23,6 +23,11 @@ if [ "$(id -u)" != "0" ]; then
 	exit 1
 fi
 
+install_speedtest()
+{
+	whalebrew install whalebrew/speedtest
+}
+
 install_virtualenv()
 {
 	install_pip
