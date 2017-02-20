@@ -23,9 +23,44 @@ if [ "$(id -u)" != "0" ]; then
 	exit 1
 fi
 
+install_virtualenv()
+{
+	install_pip
+	pip install --upgrade virtualenv
+}
+
+install_virtualenv3()
+{
+	install_pip3
+	pip3 install --upgrade virtualenv
+}
+
+install_docker()
+{
+	# https://docs.docker.com/engine/installation/linux/ubuntulinux/
+	curl -sSL get.docker.com | sh
+	docker --version
+	systemctl enable docker
+	systemctl start docker
+	usermod -aG docker "$(who -m | awk '{print $1;}')"
+}
+
+install_compose()
+{
+	install_pip
+	pip install --upgrade docker-compose
+	docker-compose --version
+}
+
+install_acdcli()
+{
+	install_pip3
+	pip3 install --upgrade acdcli
+}
+
 install_snap()
 {
-	apt-get install "snap" -y
+	apt install -y snap
 }
 
 install_whalebrew()
@@ -38,23 +73,23 @@ install_whalebrew()
 
 install_softwareproperties()
 {
-	apt-get install "software-properties-common" -y
+	apt install -y software-properties-common
 }
 
 install_stow()
 {
 	# http://www.gnu.org/software/stow/
-	apt-get install "stow" -y
+	apt install -y stow
 }
 
 install_make()
 {
-	apt-get install "make" -y
+	apt install -y make
 }
 
 install_etckeeper()
 {
-	apt-get install "etckeeper" -y
+	apt install -y etckeeper
 }
 
 install_cipherscan()
@@ -76,13 +111,6 @@ install_rclone()
 	install_snap
 	snap install rclone --classic
 	snap refresh rclone
-	# install_unzip
-	# wget 'http://downloads.rclone.org/rclone-current-linux-amd64.zip'
-	# unzip rclone-current-linux-amd64.zip
-	# cd rclone-*-linux-amd64
-	# cp rclone /usr/sbin/
-	# chown root:root /usr/sbin/rclone
-	# chmod 755 /usr/sbin/rclone
 }
 
 install_gdrive()
@@ -95,83 +123,84 @@ install_gdrive()
 
 install_unionfs()
 {
-	apt-get install "unionfs-fuse" -y
+	apt install -y unionfs-fuse
 }
 
 install_encfs()
 {
-	apt-get install "encfs" -y
+	apt install -y encfs
 }
 
 install_zip()
 {
-	apt-get install "zip" -y
+	apt install -y zip
 }
 
 install_unzip()
 {
-	apt-get install "unzip" -y
+	apt install -y unzip
 }
 
 install_pip()
 {
-	apt-get install "python-pip" -y
+	apt install -y python-pip
+	pip install --upgrade pip
 }
 
 install_pip3()
 {
-	apt-get install "python3-pip" -y
+	apt install -y python3-pip
 }
 
 install_cifs()
 {
-	apt-get install "cifs-utils" -y
+	apt install -y cifs-utils
 }
 
 install_moreutils()
 {
-	apt-get install "moreutils" -y
+	apt install -y moreutils
 }
 
 install_ufw()
 {
-	apt-get install "ufw" -y
+	apt install -y ufw
 }
 
 install_ntp()
 {
 	timedatectl set-timezone 'America/New_York'
-	apt-get install "ntp" -y
+	apt install -y ntp
 	ufw allow 'ntp'
 }
 
 install_openssh()
 {
-	apt-get install "openssh-server" -y
+	apt install -y openssh-server
 	ufw allow 'OpenSSH'
 }
 
 install_fail2ban()
 {
-	apt-get install "fail2ban" -y
+	apt install -y fail2ban
 }
 
 install_nano()
 {
-	apt-get install "nano" -y
+	apt install -y nano
 }
 
 install_git()
 {
 	install_softwareproperties
-	add-apt-repository ppa:git-core/ppa -y
+	add-apt-repository ppa:git-core/ppa
 	apt-get update
-	apt-get install "git" -y
+	apt install -y git
 }
 
 install_rsnapshot()
 {
-	apt-get install "rsnapshot" -y
+	apt install -y rsnapshot
 }
 
 install_common()
@@ -181,6 +210,7 @@ install_common()
 	install_openssh
 	install_git
 	install_nano
+	install_make
 	install_stow
 }
 
