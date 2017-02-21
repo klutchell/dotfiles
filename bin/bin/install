@@ -53,10 +53,10 @@ install_virtualenv()
 install_docker()
 {
 	curl -sSL get.docker.com | sh
-	docker --version
-	systemctl enable docker
-	systemctl start docker
 	usermod -aG docker "$(who -m | awk '{print $1;}')"
+	systemctl enable docker
+        systemctl start docker
+	docker --version
 }
 
 install_compose()
