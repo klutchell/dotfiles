@@ -6,13 +6,23 @@ sudo apt -y upgrade
 sudo apt -y autoremove
 
 # install common utilities
-curl https://raw.githubusercontent.com/klutchell/dotfiles/master/bin/bin/install | sudo bash -s ufw ssh ntp git nano make stow moreutils
+curl https://raw.githubusercontent.com/klutchell/dotfiles/master/bin/bin/install | sudo bash -s ufw ssh ntp git nano moreutils
 
 # generate ssh key
 ssh-keygen
-cat .ssh/id_rsa.pub
+# <- prompt for password
+key="$(cat ~/.ssh/id_rsa.pub)"
+title="${key##* }"
+
+# upload public ssh key to github
+curl --user "klutchell" --data "{\"title\":\"${title}\",\"key\":\"${key}\"}" https://api.github.com/user/keys
+
+# download public ssh keys from github
+curl https://github.com/klutchell.keys >> ~/.ssh/authorized_keys
 
 # install dotfiles
+apt install -y make stow
 git clone git@github.com:klutchell/dotfiles.git ~/dotfiles
-cd ~/dotfiles
+pushd ~/dotfiles
 make install
+popd

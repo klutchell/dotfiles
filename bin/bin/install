@@ -45,7 +45,6 @@ install_virtualenv()
 
 install_docker()
 {
-	# https://docs.docker.com/engine/installation/linux/ubuntulinux/
 	curl -sSL get.docker.com | sh
 	docker --version
 	systemctl enable docker
@@ -74,38 +73,12 @@ install_acdcli()
 	acdcli version
 }
 
-install_snap()
-{
-	apt install -y snap
-}
-
 install_whalebrew()
 {
 	# https://github.com/bfirsh/whalebrew
 	latest_url="$(curl -s https://api.github.com/repos/bfirsh/whalebrew/releases | grep browser_download_url | grep "whalebrew-$(uname -s)-$(uname -m)" | head -n 1 | cut -d '"' -f 4)"
 	curl -L "$latest_url" > /usr/local/bin/whalebrew
 	chmod +x /usr/local/bin/whalebrew
-}
-
-install_softwareproperties()
-{
-	apt install -y software-properties-common
-}
-
-install_stow()
-{
-	# http://www.gnu.org/software/stow/
-	apt install -y stow
-}
-
-install_make()
-{
-	apt install -y make
-}
-
-install_etckeeper()
-{
-	apt install -y etckeeper
 }
 
 install_cipherscan()
@@ -122,6 +95,14 @@ install_lynis()
 	git clone https://github.com/CISOfy/lynis /opt/lynis
 }
 
+install_gdrive()
+{
+	wget 'https://docs.google.com/uc?id=0B3X9GlR6EmbnQ0FtZmJJUXEyRTA&export=download' -O gdrive-linux-x64
+	cp gdrive-linux-x64 /usr/sbin/gdrive
+	chown root:root /usr/sbin/gdrive
+	chmod 755 /usr/sbin/gdrive
+}
+
 install_rclone()
 {
 	install_snap
@@ -129,12 +110,27 @@ install_rclone()
 	snap refresh rclone
 }
 
-install_gdrive()
+install_git()
 {
-	wget 'https://docs.google.com/uc?id=0B3X9GlR6EmbnQ0FtZmJJUXEyRTA&export=download' -O gdrive-linux-x64
-	cp gdrive-linux-x64 /usr/sbin/gdrive
-	chown root:root /usr/sbin/gdrive
-	chmod 755 /usr/sbin/gdrive
+	install_softwareproperties
+	add-apt-repository ppa:git-core/ppa
+	apt-get update
+	apt install -y git
+}
+
+install_snap()
+{
+	apt install -y snap
+}
+
+install_softwareproperties()
+{
+	apt install -y software-properties-common
+}
+
+install_etckeeper()
+{
+	apt install -y etckeeper
 }
 
 install_unionfs()
@@ -145,16 +141,6 @@ install_unionfs()
 install_encfs()
 {
 	apt install -y encfs
-}
-
-install_zip()
-{
-	apt install -y zip
-}
-
-install_unzip()
-{
-	apt install -y unzip
 }
 
 install_cifs()
@@ -195,14 +181,6 @@ install_nano()
 	apt install -y nano
 }
 
-install_git()
-{
-	install_softwareproperties
-	add-apt-repository ppa:git-core/ppa
-	apt-get update
-	apt install -y git
-}
-
 install_rsnapshot()
 {
 	apt install -y rsnapshot
@@ -215,9 +193,6 @@ install_common()
 	install_ntp
 	install_git
 	install_nano
-	install_make
-	install_stow
-	install_moreutils
 }
 
 usage()

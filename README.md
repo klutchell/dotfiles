@@ -9,7 +9,7 @@ my dotfile and text editor configurations
 ```bash
 sudo apt install -y make stash
 git clone git@github.com:klutchell/dotfiles.git ~/dotfiles
-cd ~/.dotfiles
+cd ~/dotfiles
 make install
 ```
 
