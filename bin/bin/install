@@ -16,16 +16,21 @@ finish()
 trap finish INT TERM EXIT
 
 # print arguments
-echo "running $THIS $@"
+echo "running $THIS $*"
 
 if [ "$(id -u)" != "0" ]; then
 	echo "This script must be run as root" 1>&2
 	exit 1
 fi
 
+install_shellcheck()
+{
+	whalebrew install whalebrew/shellcheck || docker pull whalebrew/shellcheck
+}
+
 install_speedtest()
 {
-	whalebrew install whalebrew/speedtest
+	whalebrew install whalebrew/speedtest || docker pull whalebrew/speedtest
 }
 
 install_pip()
@@ -38,8 +43,10 @@ install_virtualenv()
 	install_pip
 	pip install --upgrade virtualenv virtualenvwrapper
 	rm -rf ~/.cache/pip
-	export WORKON_HOME="/home/$(who -m | awk '{print $1;}')/.virtualenvs"
+	WORKON_HOME="/home/$(who -m | awk '{print $1;}')/.virtualenvs"
+	export WORKON_HOME
 	mkdir -p "$WORKON_HOME" || true
+	# shellcheck disable=SC1091
 	source /usr/local/bin/virtualenvwrapper.sh
 }
 
@@ -206,7 +213,7 @@ usage()
 pushd "$SCRATCH" >/dev/null
 
 [ -n "$1" ] || usage
-for util in $@
+for util in "$@"
 do
 	eval "install_${util}" || usage
 done
