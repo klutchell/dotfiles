@@ -5,6 +5,7 @@
 [core]
 	editor = nano
 	ignorecase = false
+	excludesfile = /home/kyle/.gitignore_global
 
 [push]
 	default = simple
