@@ -6,12 +6,12 @@ my dotfile and text editor configurations
 
 ## Bootstrap
 ```bash
-curl https://git.io/vy06I | bash
+curl https://raw.githubusercontent.com/klutchell/dotfiles/master/bin/bin/bootstrap | bash
 ```
 
 ## Install Utilities Only
 ```bash
-curl https://git.io/vy0r6 | sudo bash -s <utilities>
+curl https://raw.githubusercontent.com/klutchell/dotfiles/master/bin/bin/install | sudo bash -s <utilities>
 ```
 
 ## Install Dotfiles Only
