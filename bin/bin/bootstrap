@@ -12,12 +12,17 @@ curl https://raw.githubusercontent.com/klutchell/dotfiles/master/bin/bin/install
 curl https://github.com/klutchell.keys >> ~/.ssh/authorized_keys
 
 # generate ssh key
-ssh-keygen
-# <- prompt for password
-key="$(cat ~/.ssh/id_rsa.pub)"
+ssh-keygen -f ~/.ssh/github_rsa -N '' -t rsa -b 4096
+
+# add key to ssh-agent
+eval $(ssh-agent -s)
+ssh-add ~/.ssh/github_rsa
+
+# copy public key and title strings
+key="$(cat ~/.ssh/github_rsa.pub)"
 title="${key##* }"
 
-# upload public ssh key to github
+# upload publicy ssh key to github
 curl --user "klutchell" --data "{\"title\":\"${title}\",\"key\":\"${key}\"}" https://api.github.com/user/keys
 
 # install dotfiles
