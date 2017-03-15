@@ -1,4 +1,33 @@
-#!/bin/bash
+#!/usr/bin/env bash
+set -euo pipefail
+IFS=$'\n\t'
+
+#/ Usage: bootstrap <github_user>
+#/ Description: install common utilities and sync dotfiles with personal github repo
+#/ Examples: bootstrap klutchell
+#/ Options: github_user: github username for syncing ssh keys and cloning dotfiles
+#/   --help: Display this help message
+
+usage() { grep '^#/' "$0" | cut -c4- ; exit 0 ; }
+expr "$*" : ".*--help" > /dev/null && usage
+
+readonly LOG_FILE="/tmp/$(basename "$0").log"
+info()    { echo "[INFO]    $*" | tee -a "$LOG_FILE" >&2 ; }
+warning() { echo "[WARNING] $*" | tee -a "$LOG_FILE" >&2 ; }
+error()   { echo "[ERROR]   $*" | tee -a "$LOG_FILE" >&2 ; }
+fatal()   { echo "[FATAL]   $*" | tee -a "$LOG_FILE" >&2 ; exit 1 ; }
+
+cleanup() {
+    info "cleaning up..."
+    # Remove temporary files
+    # Restart services
+    # ...
+}
+
+# exit here if this script was sourced
+[[ "${BASH_SOURCE[0]}" != "$0" ]] && exit 0
+
+trap cleanup EXIT
 
 # update installed packages
 sudo apt update
@@ -6,28 +35,54 @@ sudo apt -y upgrade
 sudo apt -y autoremove
 
 # install common utilities
-curl https://raw.githubusercontent.com/klutchell/dotfiles/master/bin/bin/install | sudo bash -s ufw ssh ntp git nano moreutils
+info "installing ufw ssh ntp git nano moreutils..."
+curl https://raw.githubusercontent.com/klutchell/dotfiles/master/bin/bin/install | sudo bash -s ufw ssh ntp git nano moreutils \
+|| warning "some utilities failed to install"
 
-# download public ssh keys from github
-curl https://github.com/klutchell.keys >> ~/.ssh/authorized_keys
+github_user="${1:-none}"
+
+if [ "$github_user" == "none" ]; then
+	warning "no github user provided, exiting..."
+	exit 0
+fi
+
+# download public keys from github
+info "downloading public ssh keys from github..."
+curl "https://github.com/$github_user.keys" >> ~/.ssh/authorized_keys \
+|| warning "downloading public keys failed"
 
 # generate ssh key
-ssh-keygen -f ~/.ssh/github_rsa -N '' -t rsa -b 4096
+info "generating ssh-rsa key..."
+ssh-keygen -f ~/.ssh/github_rsa -N '' -t rsa -b 4096 \
+|| fatal "generating ssh-rsa key failed"
 
 # add key to ssh-agent
-eval $(ssh-agent -s)
-ssh-add ~/.ssh/github_rsa
+info "adding ssh-rsa key to ssh-agent..."
+eval "$(ssh-agent -s)"
+ssh-add ~/.ssh/github_rsa \
+|| error "adding ssh-rsa key to ssh-agent failed"
 
 # copy public key and title strings
 key="$(cat ~/.ssh/github_rsa.pub)"
 title="${key##* }"
 
-# upload publicy ssh key to github
-curl --user "klutchell" --data "{\"title\":\"${title}\",\"key\":\"${key}\"}" https://api.github.com/user/keys
+# upload public ssh key to github
+info "uploading public ssh-rsa key to github profile..." 
+curl --user "$github_user" --data "{\"title\":\"${title}\",\"key\":\"${key}\"}" https://api.github.com/user/keys \
+|| error "uploading public key failed"
+
+# install make and stow
+info "installing make and stow..."
+sudo apt install -y make stow
+
+# clone dotfiles
+info "cloning dotfiles from repo..."
+git clone git@github.com:klutchell/dotfiles.git ~/dotfiles \
+|| fatal "cloning dotfiles repo failed"
 
 # install dotfiles
-sudo apt install -y make stow
-git clone git@github.com:klutchell/dotfiles.git ~/dotfiles
+info "installing dotfiles with stow..."
 pushd ~/dotfiles
-make install
+make install \
+|| fatal "installing dotfiles failed"
 popd
