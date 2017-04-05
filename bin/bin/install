@@ -35,6 +35,7 @@ install_speedtest()
 
 install_pip()
 {
+	apt install -y python
 	curl https://bootstrap.pypa.io/get-pip.py | python2
 }
 
@@ -43,7 +44,7 @@ install_virtualenv()
 	install_pip
 	pip install --upgrade virtualenv virtualenvwrapper
 	rm -rf ~/.cache/pip
-	WORKON_HOME="/home/$(who -m | awk '{print $1;}')/.virtualenvs"
+	WORKON_HOME="/home/$(who am i | awk '{print $1}')/.virtualenvs"
 	export WORKON_HOME
 	mkdir -p "$WORKON_HOME" || true
 	# shellcheck disable=SC1091
@@ -53,7 +54,7 @@ install_virtualenv()
 install_docker()
 {
 	curl -sSL get.docker.com | sh
-	usermod -aG docker "$(who -m | awk '{print $1;}')"
+	usermod -aG docker "$(who am i | awk '{print $1}')"
 	systemctl enable docker
         systemctl start docker
 	docker --version
