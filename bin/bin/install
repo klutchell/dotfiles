@@ -30,7 +30,12 @@ install_shellcheck()
 
 install_speedtest()
 {
-	whalebrew install whalebrew/speedtest || docker pull whalebrew/speedtest
+	install_virtualenv
+        mkvirtualenv speedtest-cli -p python2
+	pip install --upgrade speedtest-cli
+	ln -sf "$(which speedtest)" /usr/local/bin/speedtest
+        deactivate
+        speedtest --version
 }
 
 install_pip()
