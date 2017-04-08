@@ -221,7 +221,11 @@ pushd "$SCRATCH" >/dev/null
 [ -n "$1" ] || usage
 for util in "$@"
 do
-	eval "install_${util}" || usage
+	if [ "$(type -t "install_${util}")" == "function" ]; then
+		eval "install_${util}" || usage
+	else
+		apt install -y "${util}" || usage
+	fi
 done
 
 popd >/dev/null

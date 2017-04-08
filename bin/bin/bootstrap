@@ -35,8 +35,8 @@ sudo apt -y upgrade
 sudo apt -y autoremove
 
 # install common utilities
-info "installing ufw ssh ntp git nano moreutils..."
-curl https://raw.githubusercontent.com/klutchell/dotfiles/master/bin/bin/install | sudo bash -s ufw ssh ntp git nano moreutils \
+info "installing some common utilities..."
+curl https://raw.githubusercontent.com/klutchell/dotfiles/master/bin/bin/install | sudo bash -s ntp git make stow \
 || warning "some utilities failed to install"
 
 github_user="${1:-none}"
@@ -52,28 +52,20 @@ curl "https://github.com/$github_user.keys" >> ~/.ssh/authorized_keys \
 || warning "downloading public keys failed"
 
 # generate ssh key
-info "generating ssh-rsa key..."
-ssh-keygen -f ~/.ssh/github_rsa -N '' -t rsa -b 4096 \
-|| fatal "generating ssh-rsa key failed"
-
-# add key to ssh-agent
-info "adding ssh-rsa key to ssh-agent..."
-eval "$(ssh-agent -s)"
-ssh-add ~/.ssh/github_rsa \
-|| error "adding ssh-rsa key to ssh-agent failed"
+if [ ! -f ~/.ssh/id_rsa.pub ]; then
+	info "generating ssh-rsa key..."
+	ssh-keygen -f ~/.ssh/id_rsa -N '' -t rsa -b 4096 \
+	|| fatal "generating ssh-rsa key failed"
+fi
 
 # copy public key and title strings
-key="$(cat ~/.ssh/github_rsa.pub)"
+key="$(cat ~/.ssh/id_rsa.pub)"
 title="${key##* }"
 
 # upload public ssh key to github
 info "uploading public ssh-rsa key to github profile..." 
 curl --user "$github_user" --data "{\"title\":\"${title}\",\"key\":\"${key}\"}" https://api.github.com/user/keys \
 || error "uploading public key failed"
-
-# install make and stow
-info "installing make and stow..."
-sudo apt install -y make stow
 
 # clone dotfiles
 info "cloning dotfiles from repo..."
