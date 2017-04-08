@@ -30,12 +30,11 @@ install_shellcheck()
 
 install_speedtest()
 {
-	install_virtualenv
-        mkvirtualenv speedtest-cli -p python2
-	pip install --upgrade speedtest-cli
-	ln -sf "$(which speedtest)" /usr/local/bin/speedtest
-        deactivate
-        speedtest --version
+	# https://github.com/sivel/speedtest-cli
+	apt install -y python
+	curl -L https://raw.githubusercontent.com/sivel/speedtest-cli/master/speedtest.py > /usr/local/bin/speedtest-cli
+	chmod +x /usr/local/bin/speedtest-cli
+	speedtest-cli --version
 }
 
 install_pip()
@@ -61,17 +60,22 @@ install_docker()
 	curl -sSL get.docker.com | sh
 	usermod -aG docker "$(who am i | awk '{print $1}')"
 	systemctl enable docker
-        systemctl start docker
+	systemctl start docker
 	docker --version
 }
 
 install_compose()
 {
-	install_virtualenv
-	mkvirtualenv docker-compose -p python2
-	pip install --upgrade docker-compose
-	ln -sf "$(which docker-compose)" /usr/local/bin/docker-compose
-	deactivate
+	# install_virtualenv
+	# mkvirtualenv docker-compose -p python2
+	# pip install --upgrade docker-compose
+	# ln -sf "$(which docker-compose)" /usr/local/bin/docker-compose
+	# deactivate
+	
+	local latest_url="$(curl -s https://api.github.com/repos/docker/compose/releases | grep browser_download_url | grep "docker-compose-$(uname -s)-$(uname -m)" | head -n 1 | cut -d '"' -f 4)"
+	curl -L "$latest_url" > /usr/local/bin/docker-compose
+	chmod +x /usr/local/bin/docker-compose
+	
 	docker-compose --version
 }
 
