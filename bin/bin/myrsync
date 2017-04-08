@@ -1,0 +1,49 @@
+#!/bin/bash
+TIME=$1
+DRYRUN=$2
+
+if [ -z "$TIME" ]; then
+	echo "Error: no time argument."
+	echo "Please enter the number of days to sync."
+	exit 1
+fi
+
+if [ "$DRYRUN" = "dry" ]; then
+	DRYRUNCMD="--dry-run"
+	echo "Dry run initiated..."
+fi
+
+PATHS="/home/kyle/no_snapshot/plex/movies/:/data/plex/media/movies/"
+PATHS+=" /home/kyle/no_snapshot/plex/tv/:/data/plex/media/tv/"
+PATHS+=" /home/kyle/no_snapshot/nzbget/:/data/nzbget/downloads/"
+#PATHS+=" /home/kyle/no_snapshot/transmission/:/data/transmission/downloads/"
+
+for path in $PATHS; do
+	sourcepath="${path%:*}"
+	destpath="${path#*:}"
+	[ -d "$destpath" ] || mkdir -p "$destpath"
+	rsync -avz -e "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" --progress $DRYRUNCMD --files-from=<(\
+	ssh kyle@ns535640.ip-158-69-246.net "find $sourcepath -mtime -$TIME -type f | sed 's|$sourcepath||'") \
+	kyle@ns535640.ip-158-69-246.net:/$sourcepath $destpath/
+done
+
+exit 0
+
+PATHS="/home/kyle/mediaserver/volumes/hydra/config/:/data/hydra/config/"
+PATHS+=" /home/kyle/mediaserver/volumes/letsencrypt/config/:/data/letsencrypt/config/"
+PATHS+=" /home/kyle/mediaserver/volumes/nzbget/config/:/data/nzbget/config/"
+PATHS+=" /home/kyle/mediaserver/volumes/plex/config/:/data/plex/config/"
+PATHS+=" /home/kyle/mediaserver/volumes/plexpy/config/:/data/plexpy/config/"
+PATHS+=" /home/kyle/mediaserver/volumes/portainer/data/:/data/portainer/config/"
+PATHS+=" /home/kyle/mediaserver/volumes/radarr/config/:/data/radarr/config/"
+PATHS+=" /home/kyle/mediaserver/volumes/sonarr/config/:/data/sonarr/config/"
+PATHS+=" /home/kyle/mediaserver/volumes/transmission/config/:/data/transmission/config/"
+
+for path in $PATHS; do
+	sourcepath="${path%:*}"
+	destpath="${path#*:}"
+	[ -d "$destpath" ] || mkdir -p "$destpath"
+	rsync -avz -e "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" --progress $DRYRUNCMD --files-from=<(\
+	ssh kyle@ns535640.ip-158-69-246.net "find $sourcepath -type f | sed 's|$sourcepath||'") \
+	kyle@ns535640.ip-158-69-246.net:/$sourcepath $destpath/
+done
