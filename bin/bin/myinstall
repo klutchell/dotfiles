@@ -1,32 +1,46 @@
 #!/usr/bin/env bash
+set -euo pipefail
+IFS=$'\n\t'
 
-set -eo pipefail
-
-THIS="$(basename "$0")"
-SCRATCH="$(mktemp -d -t tmp.XXXXXXXXXX)"
-
-finish()
+usage()
 {
-	local rc=$?
-	echo "exited $THIS with error level $rc"
-	popd &>/dev/null || true
-	rm -rf "$SCRATCH" &>/dev/null || true
-	exit $rc
+	cat << EOF
+usage: $(basename "$0") [--help] [utility-1] [utility-2]
+example: sudo $(basename "$0") ntp git make stow
+EOF
+	exit 0
 }
-trap finish INT TERM EXIT
 
-# print arguments
-echo "running $THIS $*"
+expr "$*" : ".*--help" > /dev/null && usage
+
+readonly LOG_FILE="/tmp/$(basename "$0").log"
+info()    { echo "$(date) [INFO]    $*" ; }
+warning() { echo "$(date) [WARNING] $*" ; }
+error()   { echo "$(date) [ERROR]   $*" ; }
+fatal()   { echo "$(date) [FATAL]   $*" ; exit 1 ; }
+exec >  >(tee -ia "$LOG_FILE")
+exec 2> >(tee -ia "$LOG_FILE" >&2)
+
+cleanup() {
+	info "cleaning up..."
+	# Remove temporary files, etc...
+	# Restart services, etc...
+	info "finished"
+}
+
+# exit here if this script was sourced
+[[ "${BASH_SOURCE[0]:-$0}" != "$0" ]] && exit 0
+
+trap cleanup EXIT
+
+[ -n "$1" ] || usage
 
 if [ "$(id -u)" != "0" ]; then
-	echo "This script must be run as root" 1>&2
+	fatal "This script must be run as root" 1>&2
 	exit 1
 fi
 
-install_shellcheck()
-{
-	whalebrew install whalebrew/shellcheck || docker pull whalebrew/shellcheck
-}
+info "installing $*..."
 
 install_speedtest()
 {
@@ -72,7 +86,7 @@ install_compose()
 	# ln -sf "$(which docker-compose)" /usr/local/bin/docker-compose
 	# deactivate
 	
-	local latest_url="$(curl -s https://api.github.com/repos/docker/compose/releases | grep browser_download_url | grep "docker-compose-$(uname -s)-$(uname -m)" | head -n 1 | cut -d '"' -f 4)"
+	latest_url="$(curl -s https://api.github.com/repos/docker/compose/releases | grep browser_download_url | grep "docker-compose-$(uname -s)-$(uname -m)" | head -n 1 | cut -d '"' -f 4)"
 	curl -L "$latest_url" > /usr/local/bin/docker-compose
 	chmod +x /usr/local/bin/docker-compose
 	
@@ -96,14 +110,6 @@ install_whalebrew()
 	latest_url="$(curl -s https://api.github.com/repos/bfirsh/whalebrew/releases | grep browser_download_url | grep "whalebrew-$(uname -s)-$(uname -m)" | head -n 1 | cut -d '"' -f 4)"
 	curl -L "$latest_url" > /usr/local/bin/whalebrew
 	chmod +x /usr/local/bin/whalebrew
-}
-
-install_cipherscan()
-{
-	# https://github.com/mozilla/cipherscan
-	# git clone https://github.com/mozilla/cipherscan.git /opt/cipherscan
-	install_whalebrew
-	whalebrew install klutchell/cipherscan
 }
 
 install_lynis()
@@ -135,46 +141,6 @@ install_git()
 	apt install -y git
 }
 
-install_snap()
-{
-	apt install -y snap
-}
-
-install_softwareproperties()
-{
-	apt install -y software-properties-common
-}
-
-install_etckeeper()
-{
-	apt install -y etckeeper
-}
-
-install_unionfs()
-{
-	apt install -y unionfs-fuse
-}
-
-install_encfs()
-{
-	apt install -y encfs
-}
-
-install_cifs()
-{
-	apt install -y cifs-utils
-}
-
-install_moreutils()
-{
-	apt install -y moreutils
-}
-
-install_ufw()
-{
-	apt install -y ufw
-}
-
 install_ntp()
 {
 	timedatectl set-timezone 'America/New_York'
@@ -188,41 +154,6 @@ install_ssh()
 	ufw allow 'OpenSSH'
 }
 
-install_fail2ban()
-{
-	apt install -y fail2ban
-}
-
-install_nano()
-{
-	apt install -y nano
-}
-
-install_rsnapshot()
-{
-	apt install -y rsnapshot
-}
-
-install_common()
-{
-	install_ufw
-	install_ssh
-	install_ntp
-	install_git
-	install_nano
-}
-
-usage()
-{
-	echo "usage: $THIS [utilities]"
-	echo "utilities:"
-	compgen -A function | sed -nr 's|^install_(.+)$| \1|p'
-	exit 1
-}
-
-pushd "$SCRATCH" >/dev/null
-
-[ -n "$1" ] || usage
 for util in "$@"
 do
 	if [ "$(type -t "install_${util}")" == "function" ]; then
@@ -231,5 +162,3 @@ do
 		apt install -y "${util}" || usage
 	fi
 done
-
-popd >/dev/null
