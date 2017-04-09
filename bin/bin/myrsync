@@ -1,5 +1,6 @@
 #!/bin/bash
-DRYRUN=$1
+SOURCE=$1
+DRYRUN=$2
 
 if [ "$DRYRUN" = "dry" ]; then
 	DRYRUNCMD="--dry-run"
@@ -13,8 +14,8 @@ mysync()
 		destpath="${path#*:}"
 		[ -d "$destpath" ] || mkdir -p "$destpath"
 		rsync -avz -e "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" --progress $DRYRUNCMD --files-from=<(\
-		ssh kyle@ns535640.ip-158-69-246.net "find $sourcepath $2 -type f | sed 's|$sourcepath||'") \
-		kyle@ns535640.ip-158-69-246.net:/$sourcepath $destpath/
+		ssh $SOURCE "find $sourcepath $2 -type f | sed 's|$sourcepath||'") \
+		$SOURCE:/$sourcepath $destpath/
 	done
 }
 
