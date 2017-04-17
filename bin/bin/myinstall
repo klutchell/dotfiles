@@ -128,14 +128,14 @@ install_gdrive()
 
 install_rclone()
 {
-	install_snap
+	apt install -y snap
 	snap install rclone --classic
 	snap refresh rclone
 }
 
 install_git()
 {
-	install_softwareproperties
+	apt install -y software-properties-common
 	add-apt-repository ppa:git-core/ppa
 	apt-get update
 	apt install -y git
