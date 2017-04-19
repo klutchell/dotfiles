@@ -11,7 +11,7 @@ curl https://raw.githubusercontent.com/klutchell/dotfiles/master/bin/bin/bootstr
 
 ## Install Utilities Only
 ```bash
-curl https://raw.githubusercontent.com/klutchell/dotfiles/master/bin/bin/myinstall | sudo bash -s <utilities>
+curl https://raw.githubusercontent.com/klutchell/dotfiles/master/bin/bin/myinstall | bash -s <utilities>
 ```
 
 ## Install Dotfiles Only

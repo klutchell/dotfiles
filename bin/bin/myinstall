@@ -35,36 +35,39 @@ trap cleanup EXIT
 
 [ -n "${1:-}" ] || usage
 
-if [ "$(id -u)" != "0" ]; then
-	fatal "This script must be run as root" 1>&2
-	exit 1
-fi
-
 info "installing $*..."
 
 install_speedtest()
 {
 	# https://github.com/sivel/speedtest-cli
-	apt install speedtest-cli
+	sudo apt install speedtest-cli
 	speedtest --version
 }
 
 install_pip()
 {
-	apt install -y python
+	sudo apt install -y python
 	curl https://bootstrap.pypa.io/get-pip.py | python2
+	/usr/local/bin/pip2 --version
+}
+
+install_pip3()
+{
+	sudo apt install -y python3
+	curl https://bootstrap.pypa.io/get-pip.py | python3
+	/usr/local/bin/pip3 --version
 }
 
 install_virtualenv()
 {
+	set +u
 	install_pip
-	pip install --upgrade virtualenv virtualenvwrapper
+	sudo -H /usr/local/bin/pip2 install --upgrade virtualenv virtualenvwrapper
 	rm -rf ~/.cache/pip
 	WORKON_HOME="/home/$(who am i | awk '{print $1}')/.virtualenvs"
 	export WORKON_HOME
 	mkdir -p "$WORKON_HOME" || true
 	# shellcheck disable=SC1091
-	set +u
 	source /usr/local/bin/virtualenvwrapper.sh
 	set -u
 }
@@ -72,37 +75,24 @@ install_virtualenv()
 install_docker()
 {
 	curl -sSL get.docker.com | sh
-	usermod -aG docker "$(who am i | awk '{print $1}')"
-	systemctl enable docker
-	systemctl start docker
+	sudo usermod -aG docker "$(who am i | awk '{print $1}')"
+	sudo systemctl enable docker
+	sudo systemctl start docker
 	docker --version
 }
 
 install_compose()
 {
-	# install_virtualenv
-	# mkvirtualenv docker-compose -p python2
-	# pip install --upgrade docker-compose
-	# ln -sf "$(which docker-compose)" /usr/local/bin/docker-compose
-	# deactivate
-
 	latest_url="$(curl -s https://api.github.com/repos/docker/compose/releases | grep browser_download_url | grep "docker-compose-$(uname -s)-$(uname -m)" | head -n 1 | cut -d '"' -f 4)"
-	curl -L "$latest_url" > /usr/local/bin/docker-compose
-	chmod +x /usr/local/bin/docker-compose
-
+	sudo bash -c "curl -L \"$latest_url\" > /usr/local/bin/docker-compose"
+	sudo chmod +x /usr/local/bin/docker-compose
 	docker-compose --version
 }
 
 install_acdcli()
 {
-	install_virtualenv
-	set +u
-	mkvirtualenv acdcli -p python3
-	pip3 install --upgrade git+https://github.com/yadayada/acd_cli.git
-	ln -sf "$(which acdcli)" /usr/local/bin/acdcli
-	ln -sf "$(which acd_cli)" /usr/local/bin/acd_cli
-	deactivate
-	set -u
+	install_pip3
+	sudo -H /usr/local/bin/pip3 install --upgrade git+https://github.com/yadayada/acd_cli.git
 	acdcli version
 }
 
@@ -110,50 +100,45 @@ install_whalebrew()
 {
 	# https://github.com/bfirsh/whalebrew
 	latest_url="$(curl -s https://api.github.com/repos/bfirsh/whalebrew/releases | grep browser_download_url | grep "whalebrew-$(uname -s)-$(uname -m)" | head -n 1 | cut -d '"' -f 4)"
-	curl -L "$latest_url" > /usr/local/bin/whalebrew
-	chmod +x /usr/local/bin/whalebrew
+	sudo bash -c "curl -L \"$latest_url\" > /usr/local/bin/whalebrew"
+	sudo chmod +x /usr/local/bin/whalebrew
+	whalebrew --version
 }
 
 install_lynis()
 {
 	# https://cisofy.com/documentation/lynis/get-started/#installation-package
-	git clone https://github.com/CISOfy/lynis /opt/lynis
-}
-
-install_gdrive()
-{
-	wget 'https://docs.google.com/uc?id=0B3X9GlR6EmbnQ0FtZmJJUXEyRTA&export=download' -O gdrive-linux-x64
-	cp gdrive-linux-x64 /usr/sbin/gdrive
-	chown root:root /usr/sbin/gdrive
-	chmod 755 /usr/sbin/gdrive
+	sudo git clone https://github.com/CISOfy/lynis /opt/lynis
 }
 
 install_rclone()
 {
-	apt install -y snap
-	snap install rclone --classic
-	snap refresh rclone
+	sudo apt install -y snap
+	sudo snap install rclone --classic
+	sudo snap refresh rclone
+	rclone --version
 }
 
 install_git()
 {
-	apt install -y software-properties-common
-	add-apt-repository ppa:git-core/ppa
-	apt-get update
-	apt install -y git
+	sudo apt install -y software-properties-common
+	sudo add-apt-repository ppa:git-core/ppa
+	sudo apt-get update
+	sudo apt install -y git
+	git --version
 }
 
 install_ntp()
 {
 	timedatectl set-timezone 'America/New_York'
-	apt install -y ntp
-	ufw allow 'ntp'
+	sudo apt install -y ntp
+	sudo ufw allow 'ntp'
 }
 
 install_ssh()
 {
-	apt install -y openssh-server
-	ufw allow 'OpenSSH'
+	sudo apt install -y openssh-server
+	sudo ufw allow 'OpenSSH'
 }
 
 for util in "$@"
