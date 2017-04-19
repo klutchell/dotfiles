@@ -6,7 +6,7 @@ my dotfile and text editor configurations
 
 ## Bootstrap
 ```bash
-curl https://raw.githubusercontent.com/klutchell/dotfiles/master/bin/bin/bootstrap | bash
+curl https://raw.githubusercontent.com/klutchell/dotfiles/master/bin/bin/bootstrap | bash -s <git_username>
 ```
 
 ## Install Utilities Only
