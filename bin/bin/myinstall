@@ -33,7 +33,7 @@ cleanup() {
 
 trap cleanup EXIT
 
-[ -n "$1" ] || usage
+[ -n "${1:-}" ] || usage
 
 if [ "$(id -u)" != "0" ]; then
 	fatal "This script must be run as root" 1>&2
