@@ -134,6 +134,6 @@ do
 	if [ "$(type -t "install_${util}")" == "function" ]; then
 		eval "install_${util}" || usage
 	else
-		apt install -y "${util}" || usage
+		sudo apt install -y "${util}" || usage
 	fi
 done
