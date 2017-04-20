@@ -40,8 +40,8 @@ info "installing $*..."
 install_speedtest()
 {
 	# https://github.com/sivel/speedtest-cli
-	sudo apt install speedtest-cli
-	speedtest --version
+	sudo apt install -y speedtest-cli
+	speedtest --version || true
 }
 
 install_pip2()
