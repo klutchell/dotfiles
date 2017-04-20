@@ -69,9 +69,6 @@ install_docker()
 
 install_compose()
 {
-	# latest_url="$(curl -s https://api.github.com/repos/docker/compose/releases | grep browser_download_url | grep "docker-compose-$(uname -s)-$(uname -m)" | head -n 1 | cut -d '"' -f 4)"
-	# sudo bash -c "curl -L \"$latest_url\" > /usr/local/bin/docker-compose"
-	# sudo chmod +x /usr/local/bin/docker-compose
 	install_pip2
 	sudo -H pip2 install --upgrade docker-compose
 	docker-compose --version
@@ -95,8 +92,10 @@ install_whalebrew()
 
 install_lynis()
 {
-	# https://cisofy.com/documentation/lynis/get-started/#installation-package
-	sudo git clone https://github.com/CISOfy/lynis /opt/lynis
+	# https://cisofy.com/documentation/lynis/get-started/
+	sudo rm -rf /usr/local/lynis 2>/dev/null || true
+	sudo git clone https://github.com/CISOfy/lynis /usr/local/lynis
+	/usr/local/lynis/lynis --version
 }
 
 install_rclone()
@@ -120,13 +119,13 @@ install_ntp()
 {
 	timedatectl set-timezone 'America/New_York'
 	sudo apt install -y ntp
-	sudo ufw allow 'ntp'
+	sudo ufw allow 'ntp' 2>/dev/null || true
 }
 
 install_ssh()
 {
 	sudo apt install -y openssh-server
-	sudo ufw allow 'OpenSSH'
+	sudo ufw allow 'OpenSSH' 2>/dev/null || true
 }
 
 for util in "$@"
