@@ -47,14 +47,14 @@ install_speedtest()
 install_pip2()
 {
 	sudo apt install -y python
-	curl https://bootstrap.pypa.io/get-pip.py | python2
+	curl https://bootstrap.pypa.io/get-pip.py | sudo -H python2
 	pip2 --version
 }
 
 install_pip3()
 {
 	sudo apt install -y python3
-	curl https://bootstrap.pypa.io/get-pip.py | python3
+	curl https://bootstrap.pypa.io/get-pip.py | sudo -H python3
 	pip3 --version
 }
 
