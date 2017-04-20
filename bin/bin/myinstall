@@ -6,7 +6,7 @@ usage()
 {
 	cat << EOF
 usage: $(basename "$0") [--help] [utility-1] [utility-2]
-example: sudo $(basename "$0") ntp git make stow
+example: $0 ntp git make stow
 EOF
 	exit 0
 }
