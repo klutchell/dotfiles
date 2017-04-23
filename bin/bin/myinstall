@@ -37,6 +37,14 @@ trap cleanup EXIT
 
 info "installing $*..."
 
+install_gdrive()
+{
+	# https://github.com/prasmussen/gdrive
+	sudo bash -c "curl -L \"https://docs.google.com/uc?id=0B3X9GlR6EmbnQ0FtZmJJUXEyRTA&export=download\" > /usr/local/bin/gdrive"
+	sudo chmod +x /usr/local/bin/gdrive
+	gdrive version
+}
+
 install_speedtest()
 {
 	# https://github.com/sivel/speedtest-cli
