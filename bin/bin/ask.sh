@@ -39,7 +39,10 @@ ask() {
     done
 }
 
+# exit here if this script was sourced
+[[ "${BASH_SOURCE[0]:-$0}" != "$0" ]] && exit 0
 
+cat << EOF
 # EXAMPLE USAGE:
 
 if ask "Do you want to do such-and-such?"; then
@@ -76,3 +79,4 @@ fi
 ask "Do you want to do such-and-such?" && said_yes
 
 ask "Do you want to do such-and-such?" || said_no
+EOF
