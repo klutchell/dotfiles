@@ -13,15 +13,25 @@ EOF
 
 expr "$*" : ".*--help" > /dev/null && usage
 
+# edit these as needed
 readonly log_file="/tmp/$(basename "$0").log"
-info()    { echo "$(date) [INFO]    $*" ; }
-warning() { echo "$(date) [WARNING] $*" ; }
-error()   { echo "$(date) [ERROR]   $*" ; }
-fatal()   { echo "$(date) [FATAL]   $*" ; exit 1 ; }
-exec >  >(tee -ia "$log_file")
-exec 2> >(tee -ia "$log_file" >&2)
+readonly gdrive_configdir="/home/ubuntu/.gdrive"
+readonly gdrive_cmd="$(which gdrive) -c '${gdrive_configdir}'"
+readonly gdrive_tmpfile="/tmp/gdrive.tmp"
+readonly gdrive_parentdir="0B8Hwaj3ywtn-Y1RmLWg3WmMtRFU"
+readonly snapshot_dir="/home/ubuntu/rsnapshot/alpha.0/localhost"
+readonly max_to_keep=3
 
-cleanup() {
+info()    { echo "[INFO]    $*" ; }
+warning() { echo "[WARNING] $*" ; }
+error()   { echo "[ERROR]   $*" ; }
+fatal()   { echo "[FATAL]   $*" ; exit 1 ; }
+
+exec >  >(ts | tee -ia "$log_file")
+exec 2> >(ts | tee -ia "$log_file" >&2)
+
+cleanup()
+{
 	info "cleaning up..."
 	popd 2>/dev/null || true
 	rm "${gdrive_tmpfile:-}" 2>/dev/null || true
@@ -30,19 +40,9 @@ cleanup() {
 }
 
 # exit here if this script was sourced
-[[ "${BASH_SOURCE[0]:-$0}" != "$0" ]] && exit 0
+[[ "${BASH_SOURCE[0]:-}" != "$0" ]] && exit 0
 
 trap cleanup EXIT
-
-# edit these as needed
-gdrive_configdir="/home/ubuntu/.gdrive"
-gdrive_cmd="$(which gdrive) -c '${gdrive_configdir}'"
-gdrive_tmpfile="/tmp/gdrive.tmp"
-gdrive_parentdir="0B8Hwaj3ywtn-Y1RmLWg3WmMtRFU"
-snapshot_dir="/home/ubuntu/rsnapshot/alpha.0/localhost"
-max_to_keep=3
-
-(. "$(dirname "${BASH_SOURCE[0]}")/ask.sh")
 
 snapshot_list()
 {
@@ -55,21 +55,21 @@ snapshot_list()
 snapshot_upload()
 {
 	[ -d "$snapshot_dir" ] || usage
-	
+
 	# tarball name includes hostname and timestamp of the snapshot dir
 	tarball_name="$(hostname)_$(date -r "${snapshot_dir}" +%Y.%m.%d_%H.%M.%S).tar.gz"
-	
+
 	# upload or update
 	snapshot_list
 	file_id="$(grep "${tarball_name}" "${gdrive_tmpfile}" | head -n1 | cut -d' ' -f1)" || true
 	[ -n "$file_id" ] && fatal "$tarball_name already exists on remote!"
-	
+
 	# compress snapshot contents
 	pushd "$snapshot_dir" >/dev/null
 	info "compressing $snapshot_dir..."
 	tar -czf "/tmp/${tarball_name}" ./*
 	popd >/dev/null
-	
+
 	info "uploading $tarball_name..."
 	eval "$gdrive_cmd upload -p \"${gdrive_parentdir}\" \"/tmp/${tarball_name}\""
 
