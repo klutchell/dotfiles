@@ -14,12 +14,15 @@ EOF
 expr "$*" : ".*--help" > /dev/null && usage
 
 # edit these as needed
-readonly log_file="/tmp/$(basename "$0").log"
+readonly scratchdir="$(mktemp -d -t tmp.XXXXXXXXXX)"
+readonly logfile="/tmp/$(basename "$0").log"
+# edit these as needed
 readonly gdrive_configdir="/home/ubuntu/.gdrive"
-readonly gdrive_cmd="$(which gdrive) -c '${gdrive_configdir}'"
-readonly gdrive_tmpfile="/tmp/gdrive.tmp"
+readonly gdrive_cmd="/usr/local/bin/gdrive -c '${gdrive_configdir}'"
+readonly gdrive_tmpfile="${scratchdir}/gdrive.tmp"
 readonly gdrive_parentdir="0B8Hwaj3ywtn-Y1RmLWg3WmMtRFU"
-readonly snapshot_dir="/home/ubuntu/rsnapshot/alpha.0/localhost"
+# edit these as needed
+readonly snapshotdir="/home/ubuntu/rsnapshot/alpha.0/localhost"
 readonly max_to_keep=3
 
 info()    { echo "[INFO]    $*" ; }
@@ -27,15 +30,14 @@ warning() { echo "[WARNING] $*" ; }
 error()   { echo "[ERROR]   $*" ; }
 fatal()   { echo "[FATAL]   $*" ; exit 1 ; }
 
-exec >  >(ts | tee -ia "$log_file")
-exec 2> >(ts | tee -ia "$log_file" >&2)
+exec >  >(ts | tee -ia "$logfile")
+exec 2> >(ts | tee -ia "$logfile" >&2)
 
 cleanup()
 {
 	info "cleaning up..."
 	popd 2>/dev/null || true
-	rm "${gdrive_tmpfile:-}" 2>/dev/null || true
-	rm "/tmp/${tarball_name:-}" 2>/dev/null || true
+	rm -rf "${scratchdir}" 2>/dev/null || true
 	info "finished"
 }
 
@@ -54,10 +56,10 @@ snapshot_list()
 
 snapshot_upload()
 {
-	[ -d "$snapshot_dir" ] || usage
+	[ -d "$snapshotdir" ] || usage
 
 	# tarball name includes hostname and timestamp of the snapshot dir
-	tarball_name="$(hostname)_$(date -r "${snapshot_dir}" +%Y.%m.%d_%H.%M.%S).tar.gz"
+	tarball_name="$(hostname)_$(date -r "${snapshotdir}" +%Y.%m.%d_%H.%M.%S).tar.gz"
 
 	# upload or update
 	snapshot_list
@@ -65,13 +67,13 @@ snapshot_upload()
 	[ -n "$file_id" ] && fatal "$tarball_name already exists on remote!"
 
 	# compress snapshot contents
-	pushd "$snapshot_dir" >/dev/null
-	info "compressing $snapshot_dir..."
-	tar -czf "/tmp/${tarball_name}" ./*
+	pushd "$snapshotdir" >/dev/null
+	info "compressing $snapshotdir..."
+	tar -czf "${scratchdir}/${tarball_name}" ./*
 	popd >/dev/null
 
 	info "uploading $tarball_name..."
-	eval "$gdrive_cmd upload -p \"${gdrive_parentdir}\" \"/tmp/${tarball_name}\""
+	eval "$gdrive_cmd upload -p \"${gdrive_parentdir}\" \"${scratchdir}/${tarball_name}\""
 
 	# delete oldest
 	snapshot_list
