@@ -32,12 +32,11 @@ trap cleanup EXIT
 # update installed packages
 sudo apt update
 sudo apt -y upgrade
-sudo apt -y autoremove
 
 # install common utilities
 info "installing some common utilities..."
-curl https://raw.githubusercontent.com/klutchell/dotfiles/master/bin/bin/myinstall | sudo bash -s git make stow \
-|| warning "some utilities failed to install"
+(curl https://raw.githubusercontent.com/klutchell/dotfiles/master/bin/bin/myinstall | sudo bash -s git make stow \
+|| warning "some utilities failed to install")
 
 github_user="${1:-none}"
 
