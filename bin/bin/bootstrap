@@ -29,6 +29,8 @@ cleanup() {
 
 trap cleanup EXIT
 
+set -v
+
 # update installed packages
 sudo apt update
 sudo apt -y upgrade
