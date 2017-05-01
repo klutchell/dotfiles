@@ -49,6 +49,7 @@ fi
 
 # download public keys from github
 info "downloading public ssh keys from github..."
+mkdir ~/.ssh 2>/dev/null || true
 curl "https://github.com/$github_user.keys" >> ~/.ssh/authorized_keys \
 || warning "downloading public keys failed"
 
