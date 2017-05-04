@@ -70,8 +70,6 @@ install_docker()
 {
 	curl -sSL get.docker.com | sh
 	sudo usermod -aG docker "$(who am i | awk '{print $1}')"
-	sudo systemctl enable docker
-	sudo systemctl start docker
 	docker --version
 }
 
