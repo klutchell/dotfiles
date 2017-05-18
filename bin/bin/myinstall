@@ -123,7 +123,7 @@ install_git()
 
 install_ntp()
 {
-	timedatectl set-timezone 'America/New_York'
+	sudo timedatectl set-timezone 'America/New_York'
 	sudo apt install -y ntp
 	sudo ufw allow 'ntp' 2>/dev/null || true
 }
