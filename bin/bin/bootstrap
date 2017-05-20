@@ -2,10 +2,12 @@
 set -euo pipefail
 IFS=$'\n\t'
 
-#/ Usage: bootstrap <github_user>
-#/ Description: install common utilities and sync dotfiles with personal github repo
-#/ Examples: bootstrap klutchell
-#/ Options: github_user: github username for syncing ssh keys and cloning dotfiles
+#/ Usage: bootstrap
+#/ Description: install required utilities and sync dotfiles with personal github repo;
+#/              a github username and password will be required;
+#/              each step will prompt you to continue before taking any action;
+#/              answer 'no' to all questions and nothing will be performed;
+#/ Examples: bootstrap
 #/   --help: Display this help message
 
 usage() { grep '^#/' "$0" | cut -c4- ; exit 0 ; }
@@ -18,10 +20,48 @@ error()   { echo "[ERROR]   $*" | tee -a "$LOG_FILE" >&2 ; }
 fatal()   { echo "[FATAL]   $*" | tee -a "$LOG_FILE" >&2 ; exit 1 ; }
 
 cleanup() {
-    info "cleaning up..."
-    # Remove temporary files
-    # Restart services
-    # ...
+	info "cleaning up..."
+	# Remove temporary files
+	# Restart services
+	# ...
+}
+
+ask()
+{
+	# http://djm.me/ask
+	local prompt default REPLY
+
+	while true; do
+
+		if [ "${2:-}" = "Y" ]; then
+			prompt="Y/n"
+			default=Y
+		elif [ "${2:-}" = "N" ]; then
+			prompt="y/N"
+			default=N
+		else
+			prompt="y/n"
+			default=
+		fi
+
+		# Ask the question (not using "read -p" as it uses stderr not stdout)
+		echo -n "$1 [$prompt] "
+
+		# Read the answer (use /dev/tty in case stdin is redirected from somewhere else)
+		read REPLY </dev/tty
+
+		# Default?
+		if [ -z "$REPLY" ]; then
+			REPLY=$default
+		fi
+
+		# Check if the reply is valid
+		case "$REPLY" in
+			Y*|y*) return 0 ;;
+			N*|n*) return 1 ;;
+		esac
+
+	done
 }
 
 # exit here if this script was sourced
@@ -29,54 +69,88 @@ cleanup() {
 
 trap cleanup EXIT
 
-set -v
-
-# update installed packages
-sudo apt update
-sudo apt -y upgrade
-
-# install common utilities
-info "installing some common utilities..."
-(curl https://raw.githubusercontent.com/klutchell/dotfiles/master/bin/bin/myinstall | sudo bash -s git make stow \
-|| warning "some utilities failed to install")
-
-github_user="${1:-none}"
-
-if [ "$github_user" == "none" ]; then
-	warning "no github user provided, exiting..."
-	exit 0
+info "Step 1: update and upgrade"
+info " This step will upgrade all installed packages via apt."
+if ask "Perform this step?" Y
+then
+	# update installed packages
+	sudo apt update
+	sudo apt -y upgrade
 fi
 
-# download public keys from github
-info "downloading public ssh keys from github..."
-mkdir ~/.ssh 2>/dev/null || true
-curl "https://github.com/$github_user.keys" >> ~/.ssh/authorized_keys \
-|| warning "downloading public keys failed"
+info "Step 2: install git, make, stow"
+info " This step will install git, make, and stow via apt."
+if ask "Perform this step?" Y
+then
+	# install common utilities
+	(curl https://raw.githubusercontent.com/klutchell/dotfiles/master/bin/bin/myinstall | sudo bash -s git make stow \
+	|| error "some utilities failed to install")
+fi
 
-# generate ssh key
-if [ ! -f ~/.ssh/id_rsa.pub ]; then
-	info "generating ssh-rsa key..."
-	ssh-keygen -f ~/.ssh/id_rsa -N '' -t rsa -b 4096 \
-	|| fatal "generating ssh-rsa key failed"
+info "Step 3: download public keys"
+info " This step will download your public github ssh keys and save them in ~/.ssh/authorized_keys."
+info " Your github username will be required."
+if ask "Perform this step?" Y
+then
+	while true
+	do
+		read -p "Enter your github username: " github_user
+		[ -n "$github_user" ] && break
+	done
+
+	# download public keys from github
+	mkdir ~/.ssh 2>/dev/null || true
+	curl "https://github.com/$github_user.keys" >> ~/.ssh/authorized_keys \
+	|| error "downloading public keys failed"
+fi
+
+# generate id_rsa if it doesn't exist
+if [ ! -f ~/.ssh/id_rsa.pub ]
+then
+	info "Step 4: generate ssh key"
+	info " This step will generate a new 4096-bit ssh rsa key as ~/.ssh/id_rsa."
+	if ask "Perform this step?" Y
+	then
+		ssh-keygen -f ~/.ssh/id_rsa -N '' -t rsa -b 4096 \
+		|| error "generating ssh-rsa key failed"
+	fi
+fi
+
+if [ ! -f ~/.ssh/id_rsa.pub ]
+then
+	fatal "A valid public key ~/.ssh/id_rsa.pub is required to continue."
 fi
 
 # copy public key and title strings
 key="$(cat ~/.ssh/id_rsa.pub)"
 title="${key##* }"
 
-# upload public ssh key to github
-info "uploading public ssh-rsa key to github profile..." 
-curl --user "$github_user" --data "{\"title\":\"${title}\",\"key\":\"${key}\"}" https://api.github.com/user/keys \
-|| error "uploading public key failed"
+info "Step 5: add public key to github"
+info " This step will add your public rsa key to your github account for ssh access."
+info " Your github password will be required."
+if ask "Perform this step?" Y
+then
+	# upload public ssh key to github
+	curl --user "$github_user" --data "{\"title\":\"${title}\",\"key\":\"${key}\"}" https://api.github.com/user/keys \
+	|| error "uploading public key failed"
+fi
 
-# clone dotfiles
-info "cloning dotfiles from repo..."
-git clone git@github.com:klutchell/dotfiles.git ~/dotfiles \
-|| fatal "cloning dotfiles repo failed"
+info "Step 6: clone dotfiles"
+info " This step will clone the dotfiles git repo into ~/dotfiles."
+if ask "Perform this step?" Y
+then
+	# clone dotfiles
+	git clone git@github.com:klutchell/dotfiles.git ~/dotfiles \
+	|| fatal "cloning dotfiles repo failed"
+fi
 
-# install dotfiles
-info "installing dotfiles with stow..."
-pushd ~/dotfiles
-make install \
-|| fatal "installing dotfiles failed"
-popd
+info "Step 7: install dotfiles"
+info " This step will use stow to link folders/files in ~/dotfiles/*/ to ~/"
+if ask "Perform this step?" Y
+then
+	# install dotfiles
+	pushd ~/dotfiles
+	make install \
+	|| fatal "installing dotfiles failed"
+	popd
+fi
