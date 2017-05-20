@@ -135,7 +135,7 @@ info "now we can clone your dotfiles git repo into ~/dotfiles"
 if ask "clone repo?" Y
 then
 	# clone dotfiles
-	git clone git@github.com:klutchell/dotfiles.git ~/dotfiles \
+	git clone git@github.com:${github_user}/dotfiles.git ~/dotfiles \
 	|| fatal "cloning dotfiles repo failed"
 fi
 

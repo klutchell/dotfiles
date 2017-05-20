@@ -4,19 +4,18 @@
 
 my dotfile and text editor configurations
 
-## Bootstrap
+## Usage
+
+Fork this repo before running bootstrap or dotfiles install.
+
+### Bootstrap a new workstation
 ```bash
-curl https://raw.githubusercontent.com/klutchell/dotfiles/master/bin/bin/bootstrap | bash -s <git_username>
+curl https://raw.githubusercontent.com/klutchell/dotfiles/master/bin/bin/bootstrap | bash
 ```
 
-## Install Utilities Only
+### Install dotfiles manually
 ```bash
-curl https://raw.githubusercontent.com/klutchell/dotfiles/master/bin/bin/myinstall | bash -s <utilities>
-```
-
-## Install Dotfiles Only
-```bash
-sudo apt install -y make stash
+sudo apt install -y make git stow
 git clone git@github.com:klutchell/dotfiles.git ~/dotfiles
 cd ~/dotfiles
 make install
