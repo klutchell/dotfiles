@@ -69,88 +69,82 @@ ask()
 
 trap cleanup EXIT
 
-info "Step 1: update and upgrade"
-info " This step will upgrade all installed packages via apt."
-if ask "Perform this step?" Y
+info "first we can optionally update all currently installed packages via apt"
+if ask "update packages?" Y
 then
 	# update installed packages
 	sudo apt update
 	sudo apt -y upgrade
 fi
 
-info "Step 2: install git, make, stow"
-info " This step will install git, make, and stow via apt."
-if ask "Perform this step?" Y
+info "we require some common utilities (git, make, stow) in order to install dotfiles"
+if ask "install utilities?" Y
 then
 	# install common utilities
 	(curl https://raw.githubusercontent.com/klutchell/dotfiles/master/bin/bin/myinstall | sudo bash -s git make stow \
 	|| error "some utilities failed to install")
 fi
 
-info "Step 3: download public keys"
-info " This step will download your public github ssh keys and save them in ~/.ssh/authorized_keys."
-info " Your github username will be required."
-if ask "Perform this step?" Y
+info "now we can optionally download your public github ssh keys and save them in ~/.ssh/authorized_keys"
+info "this will authorize your existing workstations to ssh into this server without a password"
+info "your github username will be required"
+if ask "authorize public keys?" Y
 then
-	while true
+	while [ -z "$github_user" ]
 	do
-		read -p "Enter your github username: " github_user
-		[ -n "$github_user" ] && break
+		read -p "github username: " github_user
 	done
-
 	# download public keys from github
 	mkdir ~/.ssh 2>/dev/null || true
 	curl "https://github.com/$github_user.keys" >> ~/.ssh/authorized_keys \
 	|| error "downloading public keys failed"
 fi
 
-# generate id_rsa if it doesn't exist
-if [ ! -f ~/.ssh/id_rsa.pub ]
-then
-	info "Step 4: generate ssh key"
-	info " This step will generate a new 4096-bit ssh rsa key as ~/.ssh/id_rsa."
-	if ask "Perform this step?" Y
+while [ ! -f ~/.ssh/id_rsa.pub ]
+do
+	# generate id_rsa if it doesn't exist
+	info "the next few steps require a public ssh key saved in ~/.ssh/id_rsa.pub"
+	if ask "generate key?" Y
 	then
 		ssh-keygen -f ~/.ssh/id_rsa -N '' -t rsa -b 4096 \
 		|| error "generating ssh-rsa key failed"
+	else
+		fatal "public ssh key ~/.ssh/id_rsa.pub required to continue"
 	fi
-fi
-
-if [ ! -f ~/.ssh/id_rsa.pub ]
-then
-	fatal "A valid public key ~/.ssh/id_rsa.pub is required to continue."
-fi
+done
 
 # copy public key and title strings
+info "found public ssh key ~/.ssh/id_rsa.pub"
 key="$(cat ~/.ssh/id_rsa.pub)"
 title="${key##* }"
 
-info "Step 5: add public key to github"
-info " This step will add your public rsa key to your github account for ssh access."
-info " Your github password will be required."
-if ask "Perform this step?" Y
+info "in order to clone via ssh, we need to add your public ssh key for this workstation to your github account"
+info "your github username and password will be required"
+if ask "add public key?" Y
 then
+	while [ -z "$github_user" ]
+	do
+		read -p "github username: " github_user
+	done
 	# upload public ssh key to github
 	curl --user "$github_user" --data "{\"title\":\"${title}\",\"key\":\"${key}\"}" https://api.github.com/user/keys \
-	|| error "uploading public key failed"
+	|| fatal "uploading public key failed"
 fi
 
-info "Step 6: clone dotfiles"
-info " This step will clone the dotfiles git repo into ~/dotfiles."
-if ask "Perform this step?" Y
+info "now we can clone your dotfiles git repo into ~/dotfiles"
+if ask "clone repo?" Y
 then
 	# clone dotfiles
 	git clone git@github.com:klutchell/dotfiles.git ~/dotfiles \
 	|| fatal "cloning dotfiles repo failed"
 fi
 
-info "Step 7: install dotfiles"
-info " This step will use stow to link folders/files in ~/dotfiles/*/ to ~/"
-if ask "Perform this step?" Y
+info "next we will use stow to soft link files and folders in ~/dotfiles/*/ to ~/"
+if ask "link dotfiles?" Y
 then
 	# install dotfiles
 	pushd ~/dotfiles
 	make install \
-	|| fatal "installing dotfiles failed"
+	|| fatal "linking dotfiles failed"
 	popd
 fi
