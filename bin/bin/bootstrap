@@ -69,6 +69,8 @@ ask()
 
 trap cleanup EXIT
 
+exec 0</dev/tty
+
 info "first we can optionally update all currently installed packages via apt"
 if ask "update packages?" Y
 then
@@ -92,12 +94,12 @@ if ask "authorize public keys?" Y
 then
 	while [ -z "${github_user:-}" ]
 	do
-		read -p "github username: " github_user < /dev/tty
+		read -p "github username: " github_user
 	done
 	# download public keys from github
 	mkdir ~/.ssh 2>/dev/null || true
-	curl "https://github.com/${github_user}.keys" >> ~/.ssh/authorized_keys \
-	|| error "downloading public keys failed"
+	curl "https://github.com/${github_user}.keys" #>> ~/.ssh/authorized_keys \
+	#|| error "downloading public keys failed"
 fi
 
 while [ ! -f ~/.ssh/id_rsa.pub ]
@@ -124,7 +126,7 @@ if ask "add public key?" Y
 then
 	while [ -z "${github_user:-}" ]
 	do
-		read -p "github username: " github_user < /dev/tty
+		read -p "github username: " github_user
 	done
 	# upload public ssh key to github
 	curl --user "${github_user}" --data "{\"title\":\"${title}\",\"key\":\"${key}\"}" https://api.github.com/user/keys \
