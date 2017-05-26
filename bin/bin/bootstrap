@@ -90,7 +90,7 @@ info "this will authorize your existing workstations to ssh into this server wit
 info "your github username will be required"
 if ask "authorize public keys?" Y
 then
-	while [ -z "$github_user" ]
+	while [ -z "${github_user:-}" ]
 	do
 		read -p "github username: " github_user
 	done
@@ -122,7 +122,7 @@ info "in order to clone via ssh, we need to add your public ssh key for this wor
 info "your github username and password will be required"
 if ask "add public key?" Y
 then
-	while [ -z "$github_user" ]
+	while [ -z "${github_user:-}" ]
 	do
 		read -p "github username: " github_user
 	done
