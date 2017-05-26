@@ -124,10 +124,10 @@ if ask "add public key?" Y
 then
 	while [ -z "${github_user:-}" ]
 	do
-		read -p "github username: " github_user
+		read -p "github username: " github_user < /dev/tty
 	done
 	# upload public ssh key to github
-	curl --user "$github_user" --data "{\"title\":\"${title}\",\"key\":\"${key}\"}" https://api.github.com/user/keys \
+	curl --user "${github_user}" --data "{\"title\":\"${title}\",\"key\":\"${key}\"}" https://api.github.com/user/keys \
 	|| fatal "uploading public key failed"
 fi
 
