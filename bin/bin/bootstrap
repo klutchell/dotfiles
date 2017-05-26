@@ -48,7 +48,7 @@ ask()
 		echo -n "$1 [$prompt] "
 
 		# Read the answer (use /dev/tty in case stdin is redirected from somewhere else)
-		read REPLY </dev/tty
+		read REPLY < /dev/tty
 
 		# Default?
 		if [ -z "$REPLY" ]; then
@@ -68,8 +68,6 @@ ask()
 [[ "${BASH_SOURCE[0]:-$0}" != "$0" ]] && exit 0
 
 trap cleanup EXIT
-
-exec 0</dev/tty
 
 info "first we can optionally update all currently installed packages via apt"
 if ask "update packages?" Y
@@ -94,7 +92,7 @@ if ask "authorize public keys?" Y
 then
 	while [ -z "${github_user:-}" ]
 	do
-		read -p "github username: " github_user
+		read -p "github username: " github_user < /dev/tty
 	done
 	# download public keys from github
 	mkdir ~/.ssh 2>/dev/null || true
@@ -126,10 +124,10 @@ if ask "add public key?" Y
 then
 	while [ -z "${github_user:-}" ]
 	do
-		read -p "github username: " github_user
+		read -p "github username: " github_user < /dev/tty
 	done
 	# upload public ssh key to github
-	curl --user "${github_user}" --data "{\"title\":\"${title}\",\"key\":\"${key}\"}" https://api.github.com/user/keys \
+	curl --user "${github_user}" --data "{\"title\":\"${title}\",\"key\":\"${key}\"}" https://api.github.com/user/keys < /dev/tty \
 	|| fatal "uploading public key failed"
 fi
 
