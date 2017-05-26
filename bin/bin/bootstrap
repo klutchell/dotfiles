@@ -96,8 +96,8 @@ then
 	done
 	# download public keys from github
 	mkdir ~/.ssh 2>/dev/null || true
-	curl "https://github.com/${github_user}.keys" # >> ~/.ssh/authorized_keys \
-	# || error "downloading public keys failed"
+	curl "https://github.com/${github_user}.keys" >> ~/.ssh/authorized_keys \
+	|| error "downloading public keys failed"
 fi
 
 while [ ! -f ~/.ssh/id_rsa.pub ]
