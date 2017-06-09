@@ -73,8 +73,7 @@ info "first we can optionally update all currently installed packages via apt"
 if ask "update packages?" Y
 then
 	# update installed packages
-	sudo apt update
-	sudo apt -y upgrade
+	sudo apt-get upgrade -y && sudo apt-get dist-upgrade -y && sudo apt-get autoremove -y
 fi
 
 info "we require some common utilities (git, make, stow) in order to install dotfiles"
