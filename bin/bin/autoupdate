@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+set -euo pipefail
+IFS=$'\n\t'
+
+usage()
+{
+        cat << EOF
+usage: copy $(basename "$0") to desired autocron schedule
+example: sudo cp $(basename "$0") /etc/cron.weekly/ && sudo chmod +x /etc/cron.weekly/$(basename "$0")
+EOF
+        exit 0
+}
+
+expr "$*" : ".*--help" > /dev/null && usage
+
+readonly LOG_FILE="/tmp/$(basename "$0").log"
+info()    { echo "$(date) [INFO]    $*" ; }
+warning() { echo "$(date) [WARNING] $*" ; }
+error()   { echo "$(date) [ERROR]   $*" ; }
+fatal()   { echo "$(date) [FATAL]   $*" ; exit 1 ; }
+exec >  >(tee -ia "$LOG_FILE")
+exec 2> >(tee -ia "$LOG_FILE" >&2)
+
+cleanup() {
+        info "cleaning up..."
+        # Remove temporary files, etc...
+        # Restart services, etc...
+        info "finished"
+}
+
+# exit here if this script was sourced
+[[ "${BASH_SOURCE[0]:-$0}" != "$0" ]] && exit 0
+
+trap cleanup EXIT
+
+/usr/bin/apt-get update && \
+/usr/bin/apt-get dist-upgrade -y && \
+/usr/bin/apt-get autoremove -y
