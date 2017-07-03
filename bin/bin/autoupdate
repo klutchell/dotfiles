@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 IFS=$'\n\t'
+PATH=/usr/bin:/bin:/usr/sbin:/sbin
 
 usage()
 {
