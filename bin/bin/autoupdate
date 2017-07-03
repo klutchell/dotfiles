@@ -3,11 +3,13 @@ set -euo pipefail
 IFS=$'\n\t'
 PATH=/usr/bin:/bin:/usr/sbin:/sbin
 
+abs() { echo "$(cd "$(dirname "${1}")" && pwd)/$(basename "${1}")"; }
+
 usage()
 {
         cat << EOF
-usage: copy $(basename "$0") to desired autocron schedule
-example: sudo cp $(basename "$0") /etc/cron.weekly/ && sudo chmod +x /etc/cron.weekly/$(basename "$0")
+usage: either copy or symlink $(basename "$0") to desired autocron schedule
+example: sudo ln -s "$(abs "${BASH_SOURCE[0]:-$0}")" /etc/cron.weekly/$(basename "$0")
 EOF
         exit 0
 }
