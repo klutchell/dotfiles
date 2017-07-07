@@ -121,6 +121,15 @@ install_git()
 	git --version
 }
 
+install_subversion()
+{
+	sudo sh -c 'echo "deb http://opensource.wandisco.com/ubuntu `lsb_release -cs` svn19" >> /etc/apt/sources.list.d/subversion19.list'
+	sudo wget -q http://opensource.wandisco.com/wandisco-debian.gpg -O- | sudo apt-key add -
+	sudo apt-get update
+	sudo apt-get install -y subversion
+	svn --version
+}
+
 install_ntp()
 {
 	sudo timedatectl set-timezone 'America/New_York'
