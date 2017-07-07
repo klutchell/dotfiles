@@ -82,7 +82,7 @@ info "(required for installing dotfiles)"
 if ask "?" Y
 then
 	# install common utilities
-	(curl https://raw.githubusercontent.com/klutchell/dotfiles/master/bin/bin/myinstall | sudo bash -s git make stow \
+	(curl https://raw.githubusercontent.com/klutchell/dotfiles/master/bin/bin/myinstall | bash -s git make stow \
 	|| error "some utilities failed to install")
 fi
 
