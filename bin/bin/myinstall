@@ -93,7 +93,7 @@ install_whalebrew()
 	latest_url="$(curl -s https://api.github.com/repos/bfirsh/whalebrew/releases | grep browser_download_url | grep "whalebrew-$(uname -s)-$(uname -m)" | head -n 1 | cut -d '"' -f 4)"
 	sudo bash -c "curl -L \"$latest_url\" > /usr/local/bin/whalebrew"
 	sudo chmod +x /usr/local/bin/whalebrew
-	whalebrew --version
+	whalebrew version
 }
 
 install_lynis()
