@@ -48,20 +48,20 @@ install_gdrive()
 install_speedtest()
 {
 	# https://github.com/sivel/speedtest-cli
-	sudo apt install -y speedtest-cli
+	sudo apt-get install -y speedtest-cli
 	speedtest --version || true
 }
 
 install_pip2()
 {
-	sudo apt install -y python
+	sudo apt-get install -y python
 	curl https://bootstrap.pypa.io/get-pip.py | sudo -H python2
 	pip2 --version
 }
 
 install_pip3()
 {
-	sudo apt install -y python3
+	sudo apt-get install -y python3
 	curl https://bootstrap.pypa.io/get-pip.py | sudo -H python3
 	pip3 --version
 }
@@ -93,7 +93,7 @@ install_whalebrew()
 	latest_url="$(curl -s https://api.github.com/repos/bfirsh/whalebrew/releases | grep browser_download_url | grep "whalebrew-$(uname -s)-$(uname -m)" | head -n 1 | cut -d '"' -f 4)"
 	sudo bash -c "curl -L \"$latest_url\" > /usr/local/bin/whalebrew"
 	sudo chmod +x /usr/local/bin/whalebrew
-	whalebrew --version
+	whalebrew version
 }
 
 install_lynis()
@@ -106,7 +106,7 @@ install_lynis()
 
 install_rclone()
 {
-	sudo apt install -y snap
+	sudo apt-get install -y snap
 	sudo snap install rclone --classic
 	sudo snap refresh rclone
 	rclone --version
@@ -114,10 +114,10 @@ install_rclone()
 
 install_git()
 {
-	sudo apt install -y software-properties-common
+	sudo apt-get install -y software-properties-common
 	sudo add-apt-repository ppa:git-core/ppa
 	sudo apt-get update
-	sudo apt install -y git
+	sudo apt-get install -y git
 	git --version
 }
 
@@ -133,13 +133,13 @@ install_subversion()
 install_ntp()
 {
 	sudo timedatectl set-timezone 'America/New_York'
-	sudo apt install -y ntp
+	sudo apt-get install -y ntp
 	sudo ufw allow 'ntp' 2>/dev/null || true
 }
 
 install_ssh()
 {
-	sudo apt install -y openssh-server
+	sudo apt-get install -y openssh-server
 	sudo ufw allow 'OpenSSH' 2>/dev/null || true
 }
 
@@ -148,6 +148,6 @@ do
 	if [ "$(type -t "install_${util}")" == "function" ]; then
 		eval "install_${util}" || usage
 	else
-		sudo apt install -y "${util}" || usage
+		sudo apt-get install -y "${util}" || usage
 	fi
 done
