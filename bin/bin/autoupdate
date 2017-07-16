@@ -37,10 +37,10 @@ cleanup() {
 trap cleanup EXIT
 
 info "starting update..."
-/usr/bin/apt-get update
+DEBIAN_FRONTEND=noninteractive /usr/bin/apt-get update
 
 info "starting dist-upgrade..."
-/usr/bin/apt-get dist-upgrade -y
+DEBIAN_FRONTEND=noninteractive /usr/bin/apt-get dist-upgrade -y
 
 info "starting autoremove..."
-/usr/bin/apt-get autoremove -y
+DEBIAN_FRONTEND=noninteractive /usr/bin/apt-get autoremove -y
