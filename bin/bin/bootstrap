@@ -1,151 +1,118 @@
 #!/usr/bin/env bash
+
 set -euo pipefail
-IFS=$'\n\t'
 
-#/ Usage: bootstrap
-#/ Description: install required utilities and sync dotfiles with personal github repo;
-#/              a github username and password will be required;
-#/              each step will prompt you to continue before taking any action;
-#/              answer 'no' to all questions and nothing will be performed;
-#/ Examples: bootstrap
-#/   --help: Display this help message
-
-usage() { grep '^#/' "$0" | cut -c4- ; exit 0 ; }
-expr "$*" : ".*--help" > /dev/null && usage
-
-readonly LOG_FILE="/tmp/$(basename "$0").log"
-info()    { echo "[INFO]    $*" | tee -a "$LOG_FILE" >&2 ; }
-warning() { echo "[WARNING] $*" | tee -a "$LOG_FILE" >&2 ; }
-error()   { echo "[ERROR]   $*" | tee -a "$LOG_FILE" >&2 ; }
-fatal()   { echo "[FATAL]   $*" | tee -a "$LOG_FILE" >&2 ; exit 1 ; }
-
-cleanup() {
-	info "cleaning up..."
-	# Remove temporary files
-	# Restart services
-	# ...
-}
-
-ask()
+# capture script exit
+cleanup()
 {
-	# http://djm.me/ask
-	local prompt default REPLY
-
-	while true; do
-
-		if [ "${2:-}" = "Y" ]; then
-			prompt="Y/n"
-			default=Y
-		elif [ "${2:-}" = "N" ]; then
-			prompt="y/N"
-			default=N
-		else
-			prompt="y/n"
-			default=
-		fi
-
-		# Ask the question (not using "read -p" as it uses stderr not stdout)
-		echo -n "$1 [$prompt] "
-
-		# Read the answer (use /dev/tty in case stdin is redirected from somewhere else)
-		read REPLY < /dev/tty
-
-		# Default?
-		if [ -z "$REPLY" ]; then
-			REPLY=$default
-		fi
-
-		# Check if the reply is valid
-		case "$REPLY" in
-			Y*|y*) return 0 ;;
-			N*|n*) return 1 ;;
-		esac
-
-	done
+	local rc=$?
+	info "exited with error level ${rc}"
+	exit ${rc}
 }
+
+# get the command name without path
+cmd()	{ basename "${0}" ; }
+
+# determine absolute path to a provided file/folder
+abs()	{ echo "$(cd "$(dirname "${1}")" && pwd)/$(basename "${1}")"; }
+
+# append timestamp and loglevel prints
+debug()		{ if [ "${debug_enabled:-}" == "true" ]; then 
+			  echo "$(date)  [DEBUG]   $*" ; fi ; }
+info()		{ echo "$(date)  [INFO]    $*" ; }
+warning()	{ echo "$(date)  [WARNING] $*" ; }
+error()		{ echo "$(date)  [ERROR]   $*" ; }
+fatal()		{ echo "$(date)  [FATAL]   $*" ; exit 1 ; }
+
+usage()
+{
+    cat <<EOF
+
+Usage:
+                $(cmd) <github_username> <github_keyname>
+Description:
+                Clone dotfiles repo from github and install with stow.
+                Suggest running githubkeygen first to allow cloning via SSH.
+                curl https://raw.githubusercontent.com/klutchell/dotfiles/master/bin/bin/githubkeygen | bash
+Examples:
+                $(cmd) --help
+                $(cmd) --debug
+Parameters:
+                github_username     github username for syncing SSH keys
+
+                github_pubkey       existing github public key
+
+                --help              display this help message
+
+                --debug             enable debug logs
+
+EOF
+exit 2
+}
+
 
 # exit here if this script was sourced
-[[ "${BASH_SOURCE[0]:-$0}" != "$0" ]] && exit 0
+[[ "${BASH_SOURCE[0]:-${0}}" != "${0}" ]] && return
 
-trap cleanup EXIT
+# trap any exit code beyond this point
+trap cleanup INT TERM EXIT
 
-info "do you want to update all currently installed packages via apt?"
-info "(recommended)"
-if ask "?" Y
-then
-	# update installed packages
-	sudo apt-get upgrade -y && sudo apt-get dist-upgrade -y && sudo apt-get autoremove -y
-fi
+# set defaults
+debug_enabled="false"
+dotfiles_clone_dir="$(abs ~/dotfiles)"
 
-info "do you want to install git, make, and stow?"
-info "(required for installing dotfiles)"
-if ask "?" Y
-then
-	# install common utilities
-	(curl https://raw.githubusercontent.com/klutchell/dotfiles/master/bin/bin/myinstall | bash -s git make stow \
-	|| error "some utilities failed to install")
-fi
+# catch help param
+expr "$*" : ".*--help" > /dev/null && usage
 
-info "do you want to download your public github ssh keys and save them in ~/.ssh/authorized_keys?"
-info "(allows your other workstations authenticate via keys to this workstation)"
-if ask "?" Y
-then
-	while [ -z "${github_user:-}" ]
-	do
-		read -p "github username: " github_user < /dev/tty
-	done
-	# download public keys from github
-	mkdir ~/.ssh 2>/dev/null || true
-	curl "https://github.com/${github_user}.keys" >> ~/.ssh/authorized_keys \
-	|| error "downloading public keys failed"
-fi
+# catch debug param
+expr "$*" : ".*--debug" > /dev/null && debug_enabled="true"
 
-while [ ! -f ~/.ssh/id_rsa.pub ]
+# read github username from params
+github_username="${1:-}"
+
+# read github keyname from params
+github_pubkey="${2:-}"
+
+
+# WORK START
+
+
+# prompt for github username if not provided
+while [ -z "${github_username:-}" ]
 do
-	# generate id_rsa if it doesn't exist
-	info "do you want to generate a public ssh key and save it in ~/.ssh/id_rsa.pub?"
-	info "(a public key will be required to authenticate with github)"
-	if ask "?" Y
-	then
-		ssh-keygen -f ~/.ssh/id_rsa -N '' -t rsa -b 4096 \
-		|| error "generating ssh-rsa key failed"
-	else
-		fatal "public ssh key ~/.ssh/id_rsa.pub required to continue"
-	fi
+    read -p "github username: " github_username < /dev/tty
 done
 
-# copy public key and title strings
-info "found public ssh key ~/.ssh/id_rsa.pub"
-key="$(cat ~/.ssh/id_rsa.pub)"
-title="${key##* }"
+# prompt for github username if not provided
+while [ -z "${github_pubkey:-}" ]
+do
+    read -e -p "github public key: " -i "$(abs ~/.ssh/id_rsa.github.pub)" github_pubkey < /dev/tty
+done
 
-info "do you want to add your public ssh key for this workstation to your github account?"
-info "(your github username and password will be required)"
-if ask "?" Y
-then
-	while [ -z "${github_user:-}" ]
-	do
-		read -p "github username: " github_user < /dev/tty
-	done
-	# upload public ssh key to github
-	curl --user "${github_user}" --data "{\"title\":\"${title}\",\"key\":\"${key}\"}" \
-	https://api.github.com/user/keys < /dev/tty || fatal "uploading public key failed"
-fi
+[ -f "${github_pubkey}" ] || fatal "github public key '${github_pubkey}' not found"
 
-info "do you want to clone your dotfiles git repo into ~/dotfiles?"
-info "(this is required to install dotfiles)"
-if ask "?" Y
-then
-	# clone dotfiles
-	git clone git@github.com:${github_user}/dotfiles.git ~/dotfiles \
-	|| fatal "cloning dotfiles repo failed"
 
-	info "do you want to use stow to soft link files and folders in ~/dotfiles/*/ to ~/ ?"
-	if ask "?" Y
-	then
-		# install dotfiles
-		pushd ~/dotfiles
-		make install || fatal "linking dotfiles failed"
-		popd
-	fi
-fi
+
+# update package sources
+info "updating package sources..."
+sudo apt-get update -y
+
+# install git, make, and stow
+info "installing git, make, and stow..."
+sudo apt-get install git make stow -y ||
+	fatal "some utilities failed to install"
+
+
+
+# clone dotfiles repo (synced ssh key required)
+info "cloning dotfiles repo to '${dotfiles_clone_dir}'..."
+git clone "git@github.com:${github_username}/dotfiles.git" "${dotfiles_clone_dir}" ||
+	fatal "cloning dotfiles repo failed"
+
+# install dotfiles
+info "installing dotfiles in '$(abs ~)'..."
+(cd "${dotfiles_clone_dir}"
+make install || fatal "installing dotfiles failed"
+)
+
+info "done!"
