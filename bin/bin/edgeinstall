@@ -1,0 +1,186 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+# capture script exit
+cleanup()
+{
+	local rc=$?
+	info "exited with error level ${rc}"
+	exit ${rc}
+}
+
+# get the command name without path
+cmd()	{ basename "${0}" ; }
+
+# determine absolute path to a provided file/folder
+abs()	{ echo "$(cd "$(dirname "${1}")" && pwd)/$(basename "${1}")"; }
+
+# append timestamp and loglevel prints
+debug()		{ if [ "${debug_enabled:-}" == "true" ]; then 
+			  echo "$(date)  [DEBUG]   $*" ; fi ; }
+info()		{ echo "$(date)  [INFO]    $*" ; }
+warning()	{ echo "$(date)  [WARNING] $*" ; }
+error()		{ echo "$(date)  [ERROR]   $*" ; }
+fatal()		{ echo "$(date)  [FATAL]   $*" ; exit 1 ; }
+
+usage()
+{
+    cat <<EOF
+
+Usage:
+                $(cmd) <app1> <app2> <app3> ...
+Description:
+                Install bleeding-edge application binaries from source or non-default repositories.
+                Fallback to apt-get with default distro repositories if edge installer is not available.
+Examples:
+                $(cmd) git
+                $(cmd) make stow git --debug
+                $(cmd) --help
+Parameters:
+                app#        application name should match edge installer function or apt-get repo
+
+                --help      display this help message
+
+                --debug     enable debug logs
+
+EOF
+exit 2
+}
+
+
+# exit here if this script was sourced
+[[ "${BASH_SOURCE[0]:-${0}}" != "${0}" ]] && return
+
+# trap any exit code beyond this point
+trap cleanup INT TERM EXIT
+
+# set defaults
+debug_enabled="false"
+
+# catch help param
+expr "$*" : ".*--help" > /dev/null && usage
+
+# catch debug param
+expr "$*" : ".*--debug" > /dev/null && debug_enabled="true"
+
+# require at least one param
+[ -n "${1:-}" ] || usage
+
+
+install_gdrive()
+{
+	# https://github.com/prasmussen/gdrive
+	sudo bash -c "curl -L \"https://docs.google.com/uc?id=0B3X9GlR6EmbnQ0FtZmJJUXEyRTA&export=download\" > /usr/local/bin/gdrive"
+	sudo chmod +x /usr/local/bin/gdrive
+	gdrive version
+}
+
+install_pip2()
+{
+	sudo apt-get install -y python
+	curl https://bootstrap.pypa.io/get-pip.py | sudo -H python2
+	pip2 --version
+}
+
+install_pip3()
+{
+	sudo apt-get install -y python3
+	curl https://bootstrap.pypa.io/get-pip.py | sudo -H python3
+	pip3 --version
+}
+
+install_docker()
+{
+	curl -sSL get.docker.com | sh
+	sudo usermod -aG docker "$(who am i | awk '{print $1}')"
+	docker --version
+}
+
+install_compose()
+{
+	install_pip2
+	sudo -H pip2 install --upgrade docker-compose
+	docker-compose --version
+}
+
+install_acdcli()
+{
+	install_pip3
+	sudo -H pip3 install --upgrade git+https://github.com/yadayada/acd_cli.git
+	acdcli version
+}
+
+install_whalebrew()
+{
+	# https://github.com/bfirsh/whalebrew
+	local latest_url
+	latest_url="$(curl -s "https://api.github.com/repos/bfirsh/whalebrew/releases" |
+		grep browser_download_url | grep "whalebrew-$(uname -s)-$(uname -m)" | head -n 1 | cut -d '"' -f 4)"
+	sudo bash -c "curl -L \"${latest_url}\" > /usr/local/bin/whalebrew"
+	sudo chmod +x /usr/local/bin/whalebrew
+	whalebrew version
+}
+
+install_lynis()
+{
+	# https://cisofy.com/documentation/lynis/get-started/
+	sudo rm -rf /usr/local/lynis 2>/dev/null || true
+	sudo git clone https://github.com/CISOfy/lynis /usr/local/lynis
+	/usr/local/lynis/lynis --version
+}
+
+install_rclone()
+{
+	sudo apt-get install -y snap
+	sudo snap install rclone --classic
+	sudo snap refresh rclone
+	rclone --version
+}
+
+install_git()
+{
+	sudo apt-get install -y software-properties-common
+	sudo add-apt-repository ppa:git-core/ppa
+	sudo apt-get update
+	sudo apt-get install -y git
+	git --version
+}
+
+install_subversion()
+{
+	sudo sh -c 'echo "deb http://opensource.wandisco.com/ubuntu `lsb_release -cs` svn19" >> /etc/apt/sources.list.d/subversion19.list'
+	sudo wget -q http://opensource.wandisco.com/wandisco-debian.gpg -O- | sudo apt-key add -
+	sudo apt-get update
+	sudo apt-get install -y subversion
+	svn --version
+}
+
+install_ntp()
+{
+	sudo timedatectl set-timezone 'America/New_York'
+	sudo apt-get install -y ntp
+	sudo ufw allow 'ntp' 2>/dev/null || true
+}
+
+install_rsub()
+{
+	sudo wget "https://raw.github.com/aurora/rmate/master/rmate" -O "/usr/local/bin/rsub" 
+	sudo chmod a+x /usr/local/bin/rsub
+	rsub --version || true
+}
+
+
+for app in "$@"
+do
+	[ "${app}" == "--help" ] && continue
+	[ "${app}" == "--debug" ] && continue
+	if [ "$(type -t "install_${app}")" == "function" ]
+	then
+		info "installing custom '${app}'..."
+		eval "install_${app}" || fatal "failed to install '${app}'"
+	else
+		info "installing distro '${app}'..."
+		sudo apt-get install -y "${app}" || fatal "failed to install '${app}'"
+	fi
+done
