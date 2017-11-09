@@ -77,18 +77,18 @@ github_keyname="${2:-}"
 # prompt for github username if not provided
 while [ -z "${github_username:-}" ]
 do
-	read -p "github username: " github_username < /dev/tty
+	read -r -p "github username: " github_username < /dev/tty
 done
 
 # prompt for github username if not provided
 while [ -z "${github_keyname:-}" ]
 do
-	read -e -p "github keyname: " -i "id_rsa.${github_username}@github.com" github_keyname < /dev/tty
+	read -r -e -p "github keyname: " -i "id_rsa.${github_username}@github.com" github_keyname < /dev/tty
 done
 
 
-github_privkey="$(abs ~/.ssh/${github_keyname})"
-github_pubkey="$(abs ~/.ssh/${github_keyname}.pub)"
+github_privkey="$(abs "${HOME}/.ssh/${github_keyname}")"
+github_pubkey="$(abs "${HOME}/.ssh/${github_keyname}.pub")"
 pubkey_comment="${github_keyname/id_rsa\./} ($(id -un)@$(hostname))"
 
 
@@ -107,11 +107,11 @@ fi
 
 
 # read public key
-pubkey_data="$(<${github_pubkey})" || fatal "failed to read '${github_pubkey}'"
+pubkey_data="$(<"${github_pubkey}")" || fatal "failed to read '${github_pubkey}'"
 
 # download public keys from github
 info "downloading public ssh-rsa keys from github account..."
-curl "https://github.com/${github_username}.keys" >> "$(abs ~/.ssh/authorized_keys)" ||
+curl "https://github.com/${github_username}.keys" >> "$(abs "${HOME}/.ssh/authorized_keys")" ||
 	fatal "downloading public keys failed"
 
 

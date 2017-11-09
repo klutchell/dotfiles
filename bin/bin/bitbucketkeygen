@@ -77,18 +77,18 @@ bitbucket_keyname="${2:-}"
 # prompt for bitbucket username if not provided
 while [ -z "${bitbucket_username:-}" ]
 do
-	read -p "bitbucket username: " bitbucket_username < /dev/tty
+	read -r -p "bitbucket username: " bitbucket_username < /dev/tty
 done
 
 # prompt for bitbucket username if not provided
 while [ -z "${bitbucket_keyname:-}" ]
 do
-	read -e -p "bitbucket keyname: " -i "id_rsa.${bitbucket_username}@bitbucket.com" bitbucket_keyname < /dev/tty
+	read -r -e -p "bitbucket keyname: " -i "id_rsa.${bitbucket_username}@bitbucket.com" bitbucket_keyname < /dev/tty
 done
 
 
-bitbucket_privkey="$(abs ~/.ssh/${bitbucket_keyname})"
-bitbucket_pubkey="$(abs ~/.ssh/${bitbucket_keyname}.pub)"
+bitbucket_privkey="$(abs "${HOME}/.ssh/${bitbucket_keyname}")"
+bitbucket_pubkey="$(abs "${HOME}/.ssh/${bitbucket_keyname}.pub")"
 pubkey_comment="${bitbucket_keyname/id_rsa\./} ($(id -un)@$(hostname))"
 
 

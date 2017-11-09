@@ -59,7 +59,7 @@ trap cleanup INT TERM EXIT
 
 # set defaults
 debug_enabled="false"
-dotfiles_clone_dir="$(abs ~/dotfiles)"
+dotfiles_clone_dir="$(abs "${HOME}/dotfiles")"
 
 # catch help param
 expr "$*" : ".*--help" > /dev/null && usage
@@ -80,13 +80,13 @@ github_pubkey="${2:-}"
 # prompt for github username if not provided
 while [ -z "${github_username:-}" ]
 do
-    read -p "github username: " github_username < /dev/tty
+    read -r -p "github username: " github_username < /dev/tty
 done
 
 # prompt for github username if not provided
 while [ -z "${github_pubkey:-}" ]
 do
-    read -e -p "github public key: " -i "$(abs ~/.ssh/id_rsa.${github_username}@github.com.pub)" github_pubkey < /dev/tty
+    read -r -e -p "github public key: " -i "$(abs "${HOME}/.ssh/id_rsa.${github_username}@github.com.pub")" github_pubkey < /dev/tty
 done
 
 [ -f "${github_pubkey}" ] || fatal "github public key '${github_pubkey}' not found"
@@ -110,7 +110,7 @@ git clone "git@github.com:${github_username}/dotfiles.git" "${dotfiles_clone_dir
 	fatal "cloning dotfiles repo failed"
 
 # install dotfiles
-info "installing dotfiles in '$(abs ~)'..."
+info "installing dotfiles in '$(abs "${HOME}")'..."
 (cd "${dotfiles_clone_dir}"
 make install || fatal "installing dotfiles failed"
 )
