@@ -83,14 +83,13 @@ done
 # prompt for github username if not provided
 while [ -z "${github_keyname:-}" ]
 do
-	read -e -p "github keyname: " -i "id_rsa.github" github_keyname < /dev/tty
+	read -e -p "github keyname: " -i "id_rsa.${github_username}@github.com" github_keyname < /dev/tty
 done
 
 
 github_privkey="$(abs ~/.ssh/${github_keyname})"
 github_pubkey="$(abs ~/.ssh/${github_keyname}.pub)"
-# generate key comment from local username, local hostname, and bitbucket username
-pubkey_comment="$(id -un)@$(hostname) (${github_username})"
+pubkey_comment="${github_keyname/id_rsa\./} ($(id -un)@$(hostname))"
 
 
 # check github ssh-rsa key exists

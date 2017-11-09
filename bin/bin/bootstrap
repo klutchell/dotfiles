@@ -86,7 +86,7 @@ done
 # prompt for github username if not provided
 while [ -z "${github_pubkey:-}" ]
 do
-    read -e -p "github public key: " -i "$(abs ~/.ssh/id_rsa.github.pub)" github_pubkey < /dev/tty
+    read -e -p "github public key: " -i "$(abs ~/.ssh/id_rsa.${github_username}@github.com.pub)" github_pubkey < /dev/tty
 done
 
 [ -f "${github_pubkey}" ] || fatal "github public key '${github_pubkey}' not found"

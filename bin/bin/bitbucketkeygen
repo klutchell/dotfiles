@@ -33,7 +33,7 @@ Usage:
 Description:
                 Generate bitbucket rsa key for SSH authentication.
 Examples:
-                $(cmd) kharding id_rsa.bitbucket
+                $(cmd) kharding id_rsa.kharding@bitbucket.com
                 $(cmd) --debug
 Parameters:
                 bitbucket_username     bitbucket username for syncing SSH keys
@@ -83,14 +83,13 @@ done
 # prompt for bitbucket username if not provided
 while [ -z "${bitbucket_keyname:-}" ]
 do
-	read -e -p "bitbucket keyname: " -i "id_rsa.bitbucket" bitbucket_keyname < /dev/tty
+	read -e -p "bitbucket keyname: " -i "id_rsa.${bitbucket_username}@bitbucket.com" bitbucket_keyname < /dev/tty
 done
 
 
 bitbucket_privkey="$(abs ~/.ssh/${bitbucket_keyname})"
 bitbucket_pubkey="$(abs ~/.ssh/${bitbucket_keyname}.pub)"
-# generate key comment from local username, local hostname, and bitbucket username
-pubkey_comment="$(id -un)@$(hostname) (${bitbucket_username})"
+pubkey_comment="${bitbucket_keyname/id_rsa\./} ($(id -un)@$(hostname))"
 
 
 # check bitbucket ssh-rsa key exists
