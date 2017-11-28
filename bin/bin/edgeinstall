@@ -92,6 +92,7 @@ install_pip3()
 
 install_docker()
 {
+	# https://docs.docker.com/engine/installation/linux/docker-ce/ubuntu/
 	curl -sSL get.docker.com | sh
 	sudo usermod -aG docker "$(who am i | awk '{print $1}')"
 	docker --version
