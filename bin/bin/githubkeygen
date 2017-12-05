@@ -86,14 +86,21 @@ do
 	read -r -e -p "github keyname: " -i "id_rsa.${github_username}@github.com" github_keyname < /dev/tty
 done
 
+readonly ssh_root="${HOME}/.ssh"
+readonly github_privkey="${ssh_root}/${github_keyname}"
+readonly github_pubkey="${ssh_root}/${github_keyname}.pub"
+readonly pubkey_comment="${github_keyname/id_rsa\./} ($(id -un)@$(hostname))"
 
-github_privkey="$(abs "${HOME}/.ssh/${github_keyname}")"
-github_pubkey="$(abs "${HOME}/.ssh/${github_keyname}.pub")"
-pubkey_comment="${github_keyname/id_rsa\./} ($(id -un)@$(hostname))"
-
+debug "ssh_root: '${ssh_root}'"
 debug "github_privkey: '${github_privkey}'"
 debug "github_pubkey: '${github_pubkey}'"
 debug "pubkey_comment: '${pubkey_comment}'"
+
+# if ssh folder does not exist, generate it and set permissions
+if [ ! -d "${ssh_root}" ]
+then
+	mkdir "${ssh_root}" && chmod 700 "${ssh_root}"
+fi
 
 # check github ssh-rsa key exists
 info "checking for existing public github ssh-rsa key..."
@@ -102,12 +109,6 @@ then
 	# use existing github ssh-rsa key
 	info "found '${github_pubkey}'"
 else
-	# if parent folder does not exist, generate it and set permissions
-	if [ ! -d "$(dirname "${github_privkey}")" ]
-	then
-		mkdir "$(dirname "${github_privkey}")"
-		chmod 700 "$(dirname "${github_privkey}")"
-	fi
 	# generate github ssh-rsa key
 	info "generating 4096-bit ssh-rsa key..."
 	ssh-keygen -C "${pubkey_comment}" -f "${github_privkey}" -N '' -t "rsa" -b "4096" ||
