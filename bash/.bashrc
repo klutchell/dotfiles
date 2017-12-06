@@ -1,6 +1,10 @@
 # ~/.bashrc: executed by bash(1) for non-login shells.
 # see /usr/share/doc/bash/examples/startup-files (in the package bash-doc)
 # for examples
+# We use preexec and precmd hook functions for Bash
+# If you have anything that's using the Debug Trap or PROMPT_COMMAND 
+# change it to use preexec or precmd
+# See also https://github.com/rcaloras/bash-preexec
 
 # If not running interactively, don't do anything
 case $- in
@@ -25,7 +29,7 @@ shopt -s checkwinsize
 
 # If set, the pattern "**" used in a pathname expansion context will
 # match all files and zero or more directories and subdirectories.
-shopt -s globstar
+#shopt -s globstar
 
 # make less more friendly for non-text input files, see lesspipe(1)
 [ -x /usr/bin/lesspipe ] && eval "$(SHELL=/bin/sh lesspipe)"
@@ -43,7 +47,7 @@ esac
 # uncomment for a colored prompt, if the terminal has the capability; turned
 # off by default to not distract the user: the focus in a terminal window
 # should be on the output of commands, not on the prompt
-force_color_prompt=yes
+#force_color_prompt=yes
 
 if [ -n "$force_color_prompt" ]; then
     if [ -x /usr/bin/tput ] && tput setaf 1 >&/dev/null; then
@@ -63,15 +67,6 @@ else
 fi
 unset color_prompt force_color_prompt
 
-# If this is an xterm set the title to user@host:dir
-case "$TERM" in
-xterm*|rxvt*)
-    PS1="\[\e]0;${debian_chroot:+($debian_chroot)}\u@\h: \w\a\]$PS1"
-    ;;
-*)
-    ;;
-esac
-
 # enable color support of ls and also add handy aliases
 if [ -x /usr/bin/dircolors ]; then
     test -r ~/.dircolors && eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
@@ -85,7 +80,7 @@ if [ -x /usr/bin/dircolors ]; then
 fi
 
 # colored GCC warnings and errors
-export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01'
+#export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01'
 
 # some more ls aliases
 alias ll='ls -alF'
@@ -116,4 +111,61 @@ if ! shopt -oq posix; then
   fi
 fi
 
-export PROMPT_COMMAND='if [ "$(id -u)" -ne 0 ]; then echo "$(date "+%Y-%m-%d.%H:%M:%S") $(pwd) $(history 1)" >> ~/.logs/bash-history-$(date "+%Y-%m-%d").log; fi'
+# If this is an xterm set more declarative titles 
+# "dir: last_cmd" and "actual_cmd" during execution
+# If you want to exclude a cmd from being printed see line 156
+case "$TERM" in
+xterm*|rxvt*)
+    PS1="\[\e]0;${debian_chroot:+($debian_chroot)}\$(print_title)\a\]$PS1"
+    __el_LAST_EXECUTED_COMMAND=""
+    print_title () 
+    {
+        __el_FIRSTPART=""
+        __el_SECONDPART=""
+        if [ "$PWD" == "$HOME" ]; then
+            __el_FIRSTPART=$(gettext --domain="pantheon-files" "Home")
+        else
+            if [ "$PWD" == "/" ]; then
+                __el_FIRSTPART="/"
+            else
+                __el_FIRSTPART="${PWD##*/}"
+            fi
+        fi
+        if [[ "$__el_LAST_EXECUTED_COMMAND" == "" ]]; then
+            echo "$__el_FIRSTPART"
+            return
+        fi
+        #trim the command to the first segment and strip sudo
+        if [[ "$__el_LAST_EXECUTED_COMMAND" == sudo* ]]; then
+            __el_SECONDPART="${__el_LAST_EXECUTED_COMMAND:5}"
+            __el_SECONDPART="${__el_SECONDPART%% *}"
+        else
+            __el_SECONDPART="${__el_LAST_EXECUTED_COMMAND%% *}"
+        fi 
+        printf "%s: %s" "$__el_FIRSTPART" "$__el_SECONDPART"
+    }
+    put_title()
+    {
+        __el_LAST_EXECUTED_COMMAND="${BASH_COMMAND}"
+        printf "\033]0;%s\007" "$1"
+    }
+    
+    # Show the currently running command in the terminal title:
+    # http://www.davidpashley.com/articles/xterm-titles-with-bash.html
+    update_tab_command()
+    {
+        # catch blacklisted commands and nested escapes
+        case "$BASH_COMMAND" in 
+            *\033]0*|update_*|echo*|printf*|clear*|cd*)
+            __el_LAST_EXECUTED_COMMAND=""
+                ;;
+            *)
+            put_title "${BASH_COMMAND}"
+            ;;
+        esac
+    }
+    preexec_functions+=(update_tab_command)
+    ;;
+*)
+    ;;
+esac
