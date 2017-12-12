@@ -121,17 +121,18 @@ pubkey_data="$(<"${github_pubkey}")" || fatal "failed to read '${github_pubkey}'
 debug "pubkey_data: '${pubkey_data}'"
 
 # download public keys from github
-info "downloading public ssh-rsa keys from github account..."
-curl "https://github.com/${github_username}.keys" >> "$(abs "${HOME}/.ssh/authorized_keys")" ||
-	fatal "downloading public keys failed"
+# info "downloading public ssh-rsa keys from github account..."
+# curl "https://github.com/${github_username}.keys" >> "$(abs "${HOME}/.ssh/authorized_keys")" ||
+# 	warning "downloading public keys failed"
 
 # upload public ssh key to github
 info "uploading public ssh-rsa key to github account..."
 curl --user "${github_username}" --data "{\"title\":\"${pubkey_comment}\",\"key\":\"${pubkey_data}\"}" \
 	https://api.github.com/user/keys < /dev/tty ||
-		fatal "uploading public key failed"
+		error "uploading public key failed"
 
-# if ssh agent is running, add private key to ssh agent
-[ -n "$(eval "$(ssh-agent -s)")" ] && ssh-add "${github_privkey}"
+# start ssh-agent and add private key to ssh agent
+info "adding key to ssh-agent"
+exec ssh-agent bash && ssh-add "${github_privkey}"
 
 info "done!"
