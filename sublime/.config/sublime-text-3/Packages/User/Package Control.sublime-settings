@@ -7,6 +7,8 @@
 	[
 		"Dockerfile Syntax Highlighting",
 		"Dotfiles Syntax Highlighting",
-		"Package Control"
+		"Package Control",
+		"SublimeLinter",
+		"SublimeLinter-shellcheck"
 	]
 }
