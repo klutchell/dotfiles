@@ -132,7 +132,8 @@ curl --user "${github_username}" --data "{\"title\":\"${pubkey_comment}\",\"key\
 		error "uploading public key failed"
 
 # start ssh-agent and add private key to ssh agent
-info "adding key to ssh-agent"
-exec ssh-agent bash && ssh-add "${github_privkey}"
+info "adding key to ssh-agent..."
+# eval "$(ssh-agent)" && 
+ssh-add "${github_privkey}" || warning "failed to add key to ssh-agent"
 
 info "done!"
