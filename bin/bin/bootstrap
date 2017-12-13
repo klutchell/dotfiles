@@ -11,43 +11,196 @@ cleanup()
 }
 
 # get the command name without path
-cmd()	{ basename "${0}" ; }
+cmd()       { basename "$(abs "${0}")" ; }
+
+# get the workspace absolute path
+ws()        { dirname "$(abs "${0}")" ; }
 
 # determine absolute path to a provided file/folder
-abs()	{ echo "$(cd "$(dirname "${1}")" && pwd)/$(basename "${1}")"; }
+abs()       { echo "$(cd "$(dirname "${1}")" && pwd)/$(basename "${1}")"; }
 
 # append timestamp and loglevel prints
-debug()		{ if [ "${debug_enabled:-}" == "true" ]; then 
+debug()     { if [ "${debug_enabled:-}" == "true" ]; then 
 			  echo "$(date)  [DEBUG]   $*" ; fi ; }
-info()		{ echo "$(date)  [INFO]    $*" ; }
-warning()	{ echo "$(date)  [WARNING] $*" ; }
-error()		{ echo "$(date)  [ERROR]   $*" ; }
-fatal()		{ echo "$(date)  [FATAL]   $*" ; exit 1 ; }
+info()      { echo "$(date)  [INFO]    $*" ; }
+warning()   { echo "$(date)  [WARNING] $*" ; }
+error()     { echo "$(date)  [ERROR]   $*" ; }
+fatal()     { echo "$(date)  [FATAL]   $*" ; exit 1 ; }
+
+invalid_args()  { fatal "invalid arguments: '$*'" ; }
+
+extra_args()    { fatal "extra arguments: '$*'" ; }
+
+path_missing()  { fatal "'${1}' does not exist or cannot be read" ; }
+
+dos2unix()      { sed -i 's/\r$//' "${1}" ; }
+unix2dos()      { sed -i 's/$/\r/' "${1}" ; }
+
+# take an arbitrary path and figure out whether
+# it's relative to the script dir or the calling dir
+# requires 'abs' and 'ws' functions!
+rel_to_abs_path()
+{
+	local rel_path
+	local abs_path
+
+	rel_path="${1}"
+	abs_path=""
+
+	if [ -e "${rel_path}" ]
+	then
+		# relative to calling dir
+		abs_path="$(abs "${rel_path}")"
+	elif [ -e "$(ws)/${rel_path}" ]
+	then
+		# relative to script dir
+		abs_path="$(ws)/${rel_path}"
+	fi
+
+	echo "${abs_path}"
+}
 
 usage()
 {
-    cat <<EOF
-
+	cat <<EOF
 Usage:
-                $(cmd) <github_username> <github_keyname>
+				$(cmd) [dotfiles_dir] [github_user] [rsa_key]
 Description:
-                Clone dotfiles repo from github and install with stow.
-                Suggest running githubkeygen first to allow cloning via SSH.
-                curl https://raw.githubusercontent.com/klutchell/dotfiles/master/bin/bin/githubkeygen | bash
+				clone dotfiles repo from github and install with stow
 Examples:
-                $(cmd) --help
-                $(cmd) --debug
+				$(cmd) --help
+				$(cmd) --debug
+				$(cmd) ~/.dotfiles klutchell ~/.ssh/id_rsa --debug
 Parameters:
-                github_username     github username for syncing SSH keys
+				[dotfiles_dir]      ${dotfiles_dir_prompt}
 
-                github_pubkey       existing github public key
+				[github_user]       ${github_user_prompt}
 
-                --help              display this help message
+				[rsa_key]           ${rsa_key_prompt}
 
-                --debug             enable debug logs
+				-h|--help           display this help message
 
+				-d|--debug          enable debug logging
 EOF
 exit 2
+}
+
+
+get_options()
+{
+	# require at least one param
+	# [ "$#" -lt 1 ] && usage
+
+	readonly dotfiles_dir_prompt="desired or existing dotfiles path (required)"
+	readonly github_user_prompt="github user for cloning dotfiles (blank to skip)"
+	readonly rsa_key_prompt="public rsa key for github auth (blank to skip)"
+
+	readonly rsa_key_comment="$(id -un)@$(hostname) $(date)"
+
+	readonly install_utils="git make stow ntp"
+
+	local OPT opts pass
+	local debug_enabled_opt github_user_opt rsa_key_opt dotfiles_dir_opt
+
+	github_user_opt=""
+	dotfiles_dir_opt="${HOME}/.dotfiles"
+	rsa_key_opt="${HOME}/.ssh/id_rsa.pub"
+	debug_enabled_opt=false
+
+	# option defaults
+	# shellcheck disable=SC2034
+	OPT="value"
+
+	# getopts string
+	# this string needs to be updated with the single character options
+	opts="dh:"
+
+	# there are two passes here; the first pass handles the long options and
+	# any short option that is already in canonical form; the second pass
+	# uses getopt to canonicalize any remaining short options and handle them
+	for pass in 1 2
+	do
+		while [ -n "${1:-}" ]
+		do
+			case ${1} in
+				--) shift; break;;
+				-*) case "${1}" in
+						-d|--debug )        debug_enabled_opt=true ;;
+						-h|--help )         usage ;;
+						--*)                invalid_args "${1}" ;;
+						-*)     if [ "${pass}" -eq 1 ]
+								then
+									ARGS="${ARGS:-} ${1}"
+								else
+									invalid_args "${1}"
+								fi;;
+					esac;;
+				*)  if [ "${pass}" -eq 1 ]
+					then
+						ARGS="${ARGS:-} ${1}"
+					else
+						invalid_args "${1}"
+					fi;;
+			esac
+			shift
+		done
+		if [ "${pass}" -eq 1 ]
+		then
+			ARGS=$(getopt "${opts}" "${ARGS:-}") || usage
+			# shellcheck disable=SC2086
+			set -- ${ARGS}
+		fi
+	done
+
+	# handle positional arguments
+
+	# don't allow any positional arguments
+	# [ -n "$*" ] && extra_args "$*"
+
+	# require at least one positional argument
+	# [ "$#" -lt 1 ] && usage
+
+	if [ -n "${1:-}" ]
+	then
+		dotfiles_dir_opt="${1}"
+	else
+		# prompt for dotfiles dir if not provided
+		read -r -e -p "${dotfiles_dir_prompt}: " -i "${dotfiles_dir_opt}" dotfiles_dir_opt < /dev/tty
+	fi
+
+	# dotfiles_dir_opt="$(rel_to_abs_path "$(dirname "${dotfiles_dir_opt}")")"
+
+	# [ -n "${dotfiles_dir_opt}" ] || path_missing "$(dirname "${dotfiles_dir_opt}")"
+
+	if [ -n "${2:-}" ]
+	then
+		github_user_opt="${2}"
+	else
+		# prompt for github user if not provided
+		read -r -e -p "${github_user_prompt}: " -i "${github_user_opt}" rsa_key_opt < /dev/tty
+	fi
+
+	if [ -n "${3:-}" ]
+	then
+		rsa_key_opt="${3}"
+	else
+		# prompt for rsa key if not provided
+		read -r -e -p "${rsa_key_prompt}: " -i "${rsa_key_opt}" rsa_key_opt < /dev/tty
+	fi
+
+	[ -n "${3:-}" ] && rsa_key_opt="${3}"
+
+	readonly github_user="${github_user_opt}"
+	readonly dotfiles_dir="${dotfiles_dir_opt}"
+	readonly rsa_pub_key="${rsa_key_opt}"
+	readonly rsa_priv_key="${rsa_key_opt/\.pub/}"
+	readonly debug_enabled="${debug_enabled_opt}"
+
+	debug "github_user: '${github_user}'"
+	debug "dotfiles_dir: '${dotfiles_dir}'"
+	debug "rsa_priv_key: '${rsa_priv_key}'"
+	debug "rsa_pub_key: '${rsa_pub_key}'"
+	debug "debug_enabled: '${debug_enabled}'"
 }
 
 
@@ -57,62 +210,77 @@ exit 2
 # trap any exit code beyond this point
 trap cleanup INT TERM EXIT
 
-# set defaults
-debug_enabled="false"
-dotfiles_clone_dir="$(abs "${HOME}/dotfiles")"
-
-# catch help param
-expr "$*" : ".*--help" > /dev/null && usage
-
-# catch debug param
-expr "$*" : ".*--debug" > /dev/null && debug_enabled="true"
-
-# read github username from params
-github_username="${1:-}"
-
-# read github keyname from params
-github_pubkey="${2:-}"
-
 
 # WORK START
 
 
-# prompt for github username if not provided
-while [ -z "${github_username:-}" ]
-do
-    read -r -p "github username: " github_username < /dev/tty
-done
+get_options "$@"
 
-# prompt for github username if not provided
-while [ -z "${github_pubkey:-}" ]
-do
-    read -r -e -p "github public key: " -i "$(abs "${HOME}/.ssh/id_rsa.${github_username}@github.com.pub")" github_pubkey < /dev/tty
-done
-
-[ -f "${github_pubkey}" ] || fatal "github public key '${github_pubkey}' not found"
-
-
+# set timezone
+sudo timedatectl set-timezone 'America/New_York'
 
 # update package sources
 info "updating package sources..."
 sudo apt-get update -y
 
-# install git, make, and stow
-info "installing git, make, and stow..."
-sudo apt-get install git make stow -y ||
-	fatal "some utilities failed to install"
+# install required utils
+info "installing '${install_utils}'..."
+sudo apt-get install ${install_utils} -y || fatal "required utilities failed to install"
 
+if [ -n "${rsa_pub_key}" ]
+then
+	if [ -f "${rsa_pub_key}" ]
+	then
+		# use existing rsa key
+		info "found '${rsa_pub_key}'"
+	else
+		# create rsa key parent folder and set permissions
+		if [ ! -d "$(dirname "${rsa_pub_key}")" ]
+		then
+			mkdir -p "$(dirname "${rsa_pub_key}")" && chmod 700 "$(dirname "${rsa_pub_key}")"
+		fi
 
+		# generate a new rsa key
+		info "generating a new 4096-bit rsa key..."
+		ssh-keygen -C "${rsa_key_comment}" -f "${rsa_priv_key}" -N '' -t "rsa" -b "4096" ||
+			fatal "generating rsa key failed"
+	fi
 
-# clone dotfiles repo (synced ssh key required)
-info "cloning dotfiles repo to '${dotfiles_clone_dir}'..."
-git clone "git@github.com:${github_username}/dotfiles.git" "${dotfiles_clone_dir}" ||
-	fatal "cloning dotfiles repo failed"
+	# start ssh-agent and add private key to ssh agent
+	# [ -z "${SSH_AUTH_SOCK:-}" ] && eval "$(ssh-agent -s)"
+	info "adding key to ssh-agent..."
+	ssh-add "${rsa_priv_key}" || warning "failed to add key to ssh-agent"
+
+	# read public key
+	pub_key_data="$(<"${rsa_pub_key}")" || fatal "failed to read '${rsa_pub_key}'"
+
+	debug "pub_key_data: '${pub_key_data}'"
+fi
+
+if [ -n "${github_user}" ] && [ -n "${rsa_pub_key}" ] && [ -n "${pub_key_data}" ]
+then
+	# upload public ssh key to github
+	info "uploading public rsa key to github account..."
+	curl --user "${github_user}" --data "{\"title\":\"${rsa_key_comment}\",\"key\":\"${pub_key_data}\"}" \
+		"https://api.github.com/user/keys" < /dev/tty || error "uploading public key failed"
+fi
+
+if [ -n "${github_user}" ]
+then
+	# clone dotfiles
+	info "cloning dotfiles repo to '${dotfiles_dir}'..."
+	git clone "git@github.com:${github_user}/dotfiles.git" "${dotfiles_dir}" || error "cloning dotfiles repo failed"
+fi
+
+# backup existing .bashrc
+[ -f "${HOME}/.bashrc" ] && [ ! -f "${HOME}/.bashrc.orig" ] && mv "${HOME}/.bashrc" "${HOME}/.bashrc.orig"
 
 # install dotfiles
-info "installing dotfiles in '$(abs "${HOME}")'..."
-(cd "${dotfiles_clone_dir}"
-make install || fatal "installing dotfiles failed"
+info "installing dotfiles..."
+(cd "${dotfiles_dir}"
+	make install || error "installing dotfiles failed"
 )
 
 info "done!"
+
+exit 0
