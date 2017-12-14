@@ -251,7 +251,10 @@ then
 fi
 
 # backup existing .bashrc
-[ -f "${HOME}/.bashrc" ] && [ ! -f "${HOME}/.bashrc.orig" ] && mv "${HOME}/.bashrc" "${HOME}/.bashrc.orig"
+if [ -f "${HOME}/.bashrc" ] && [ ! -L "${HOME}/.bashrc" ] && [ ! -e "${HOME}/.bashrc.orig" ]
+then
+	mv "${HOME}/.bashrc" "${HOME}/.bashrc.orig"
+fi
 
 # install dotfiles
 info "installing dotfiles..."
