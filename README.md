@@ -10,19 +10,21 @@ Fork this repo before running bootstrap or dotfiles install.
 
 ### Automatic Installation
 
+_substitute github username where appropriate_
 ```bash
 # 1. read script carefully
 curl https://raw.githubusercontent.com/klutchell/dotfiles/master/bin/bin/bootstrap
 
 # 2. run script
-curl https://raw.githubusercontent.com/klutchell/dotfiles/master/bin/bin/bootstrap | bash
+curl https://raw.githubusercontent.com/klutchell/dotfiles/master/bin/bin/bootstrap | bash -s klutchell
 ```
 
 ### Manual Installation
 
+_substitute github username where appropriate_
 ```bash
-# 1. install dependencies
-sudo apt-get install -y make git stow
+# 1. install handy utilities
+sudo apt-get install -y make git stow ntp shellcheck
 
 # 2. generate an rsa key
 ssh-keygen -t "rsa" -b "4096"
