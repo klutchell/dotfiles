@@ -177,7 +177,7 @@ get_options()
 		github_user_opt="${2}"
 	else
 		# prompt for github user if not provided
-		read -r -e -p "${github_user_prompt}: " -i "${github_user_opt}" rsa_key_opt < /dev/tty
+		read -r -e -p "${github_user_prompt}: " -i "${github_user_opt}" github_user_opt < /dev/tty
 	fi
 
 	if [ -n "${3:-}" ]
